@@ -25,6 +25,13 @@
 #define COM1A_ENABLE (1<<COM1A1)|(0<<COM1A0)
 #define COM1B_ENABLE (1<<COM1B1)|(0<<COM1B0)
 
+#define FASTPWM_8BIT_A	(0<<WGM11)|(1<<WGM10)
+#define FASTPWM_9BIT_A	(1<<WGM11)|(0<<WGM10)
+#define FASTPWM_10BIT_A	(1<<WGM11)|(1<<WGM10)
+
+#define FASTPWM_B (0<<WGM13)|(1<<WGM12)
+
+
 unsigned char TWI_Act_On_Failure_In_Last_Transmission ( unsigned char TWIerrorMsg );
 
 int main(void)
@@ -44,10 +51,10 @@ int main(void)
 	DDRB = (1<<DDB1)|(1<<DDB2);
 	PORTB = 0x0;
 	
-	TCCR1A = (1<<WGM10)|(1<<WGM11)|COM1A_ENABLE|COM1B_ENABLE;
-	TCCR1B = (0<<ICNC1)|(0<<ICES1)|(0<<WGM13)|(1<<WGM12)|(0<<CS12)|(1<<CS11)|(0<<CS10);
-	OCR1A = 0x132;
-	OCR1B = 0x132;
+	TCCR1A = FASTPWM_10BIT_A|COM1B_ENABLE|COM1A_ENABLE;
+	TCCR1B = (0<<ICNC1)|(0<<ICES1)|FASTPWM_B|IOCLK_DIV8;
+	OCR1A = 0x32;
+	OCR1B = 0x32;
 	
 	
 	while(1) { 
