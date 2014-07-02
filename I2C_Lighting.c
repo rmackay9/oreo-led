@@ -34,6 +34,15 @@
 
 unsigned char TWI_Act_On_Failure_In_Last_Transmission ( unsigned char TWIerrorMsg );
 
+/*	IOclk/FastPWM hertz table
+	These are the 'easy' hertz rates to hit with the default timers
+ 				8bit	9bit	10bit
+	IOCLK_1		4010	2005	1002.5
+	IOCLK_8		501		250.5	125.25
+	IOCLK_64	62.66	31.33	15.665
+	IOCLK_256	15.65	7.825	3.9125
+	IOCLK_1024	3.9		1.95	0.975 */
+
 int main(void)
 {
 
