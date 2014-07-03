@@ -31,6 +31,7 @@
 
 #define FASTPWM_B (0<<WGM13)|(1<<WGM12)
 
+uint16_t current_comp_val = 0;
 
 unsigned char TWI_Act_On_Failure_In_Last_Transmission ( unsigned char TWIerrorMsg );
 
@@ -45,8 +46,6 @@ unsigned char TWI_Act_On_Failure_In_Last_Transmission ( unsigned char TWIerrorMs
 
 int main(void)
 {
-
-	
 	unsigned char messageBuf[TWI_BUFFER_SIZE];
 	unsigned char TWI_slaveAddress;  
 	
@@ -60,10 +59,15 @@ int main(void)
 	DDRB = (1<<DDB1)|(1<<DDB2);
 	PORTB = 0x0;
 	
+	sei();
+	
+	
 	TCCR1A = FASTPWM_10BIT_A|COM1B_ENABLE|COM1A_ENABLE;
 	TCCR1B = (0<<ICNC1)|(0<<ICES1)|FASTPWM_B|IOCLK_DIV8;
 	OCR1A = 0x32;
 	OCR1B = 0x32;
+	current_comp_val = 0x32;
+	TIMSK1 |= (1<<TOIE1);
 	
 	
 	while(1) { 
@@ -129,6 +133,27 @@ int main(void)
 			}	
 		}
 	} 
+}
+
+#define SAFE_COMPARE 0x10f
+uint8_t up = 0;
+
+
+ISR(TIMER1_OVF_vect)
+{
+	if(up){
+		current_comp_val++;
+		if(current_comp_val > SAFE_COMPARE) {
+			up = 0;
+		}
+	} else {
+		current_comp_val--;
+		if(current_comp_val == 0) {
+			up = 1;
+		}
+	}
+	OCR1B = current_comp_val;
+	OCR1A = current_comp_val;
 }
 
 unsigned char TWI_Act_On_Failure_In_Last_Transmission ( unsigned char TWIerrorMsg )
