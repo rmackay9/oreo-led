@@ -11,7 +11,8 @@ struct _Light_Manager {
     char currPattern;
     volatile uint16_t* output_a;
     volatile uint16_t* output_b;
-    long counter;
+    int16_t counter;
+    int16_t patternSpeed;
 };
 typedef struct _Light_Manager LightManager;
 

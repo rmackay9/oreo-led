@@ -24,11 +24,12 @@ CFLAGS=-Wall -Os -DF_CPU=8000000 -mmcu=attiny88 -Iinclude
 ##############################################
 
 all: 
+	make clean
 	@${MKDIR} ${OBJECT_DIR}
 	make ${OBJECT_DIR}/${OUTPUT_NAME}.hex
 	
-flash: 
-	@${AVRDUDE} -U flash:w:${OUTPUT_NAME}.hex:i
+flash: all
+	@${AVRDUDE} -U flash:w:${OBJECT_DIR}/${OUTPUT_NAME}.hex:i
 
 clean:
 	@${RM} -r ${OBJECT_DIR}
