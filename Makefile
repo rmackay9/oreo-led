@@ -4,7 +4,7 @@ OBJECT_DIR=build
 SRC_DIR=src
 INCLUDE_DIR=include
 OUTPUT_NAME=main
-OBJECTS=${OBJECT_DIR}/I2C_Lighting.o ${OBJECT_DIR}/TWI_slave.o ${OBJECT_DIR}/Light_Effects.o
+OBJECTS=${OBJECT_DIR}/I2C_Lighting.o ${OBJECT_DIR}/Light_Manager.o ${OBJECT_DIR}/TWI_slave.o 
 
 # shell commands
 CP=cp 
@@ -27,7 +27,7 @@ all:
 	@${MKDIR} ${OBJECT_DIR}
 	make ${OBJECT_DIR}/${OUTPUT_NAME}.hex
 	
-flash: all
+flash: 
 	@${AVRDUDE} -U flash:w:${OUTPUT_NAME}.hex:i
 
 clean:
@@ -37,21 +37,21 @@ clean:
 # Compile
 ##############################################
 
-${OBJECT_DIR}/Light_Effects.o: ${SRC_DIR}/Light_Effects.c ${INCLUDE_DIR}/Light_Effects.h
-	@${AVRGCC} -c -o ${OBJECT_DIR}/Light_Effects.o ${SRC_DIR}/Light_Effects.c ${CFLAGS}
+${OBJECT_DIR}/Light_Manager.o: ${SRC_DIR}/Light_Manager.c ${INCLUDE_DIR}/Light_Manager.h
+	@${AVRGCC} ${CFLAGS} -c ${SRC_DIR}/Light_Manager.c -o ${OBJECT_DIR}/Light_Manager.o  
 
 ${OBJECT_DIR}/TWI_slave.o: ${SRC_DIR}/TWI_slave.c ${INCLUDE_DIR}/TWI_slave.h
-	@${AVRGCC} -c -o ${OBJECT_DIR}/TWI_slave.o ${SRC_DIR}/TWI_slave.c ${CFLAGS}
+	@${AVRGCC} ${CFLAGS} -c ${SRC_DIR}/TWI_slave.c -o ${OBJECT_DIR}/TWI_slave.o 
 
-${OBJECT_DIR}/I2C_Lighting.o: ${SRC_DIR}/I2C_Lighting.c 
-	@${AVRGCC} -c -o ${OBJECT_DIR}/I2C_Lighting.o ${SRC_DIR}/I2C_Lighting.c ${CFLAGS}
+${OBJECT_DIR}/I2C_Lighting.o: ${SRC_DIR}/I2C_Lighting.c ${INCLUDE_DIR}/Light_Manager.h
+	@${AVRGCC} ${CFLAGS} -c ${SRC_DIR}/I2C_Lighting.c -o ${OBJECT_DIR}/I2C_Lighting.o  
 
 ##############################################
 # Link
 ##############################################
 
 ${OBJECT_DIR}/${OUTPUT_NAME}.elf: ${OBJECTS}
-	@${AVRGCC} -o ${OBJECT_DIR}/${OUTPUT_NAME}.elf ${OBJECTS} ${CFLAGS}
+	@${AVRGCC} ${OBJECTS} ${CFLAGS} -o ${OBJECT_DIR}/${OUTPUT_NAME}.elf 
 
 ${OBJECT_DIR}/${OUTPUT_NAME}.hex: ${OBJECT_DIR}/${OUTPUT_NAME}.elf
 	@${RM} -f ${OBJECT_DIR}/${OUTPUT_NAME}.hex
