@@ -1,8 +1,5 @@
 /*
- * I2C_Lighting.c
- *
- * Created: 6/25/2014 3:37:19 PM
- *  Author: john
+ * main.c
  */  
 
 #include <avr/io.h>
@@ -12,9 +9,6 @@
 #include "TWI_Slave.h"
 #include "Light_Manager.h"
 
-#define TWI_CMD_LIGHT_PULSE 0x10
-#define TWI_CMD_LIGHT_ON    0x20
-#define TWI_CMD_LIGHT_OFF   0x40
 
 #define IOCLK_DIV1024       (1<<CS12)|(0<<CS11)|(1<<CS10)
 #define IOCLK_DIV256        (1<<CS12)|(0<<CS11)|(0<<CS10)
@@ -33,35 +27,17 @@
 
 uint8_t light_pattern;
 
-unsigned char TWI_Act_On_Failure_In_Last_Transmission ( unsigned char TWIerrorMsg );
+int main(void) {
 
-unsigned char TWI_Act_On_Failure_In_Last_Transmission ( unsigned char TWIerrorMsg )
-{
-    // A failure has occurred, use TWIerrorMsg to determine the nature of the failure
-    // and take appropriate actions.
-    // Se header file for a list of possible failures messages.
-    
-    // This very simple example puts the error code on PORTB and restarts the transceiver with
-    // all the same data in the transmission buffers.
-    //PORTB = TWIerrorMsg;
-    TWI_Start_Transceiver();
-    
-    return TWIerrorMsg;
-} 
+    // TODO: record module position from hardware switches on startup, set I2C slave address accordingly
 
-int main(void)
-{
+    // TODO: create synchronization event handler, adjust timer counter accordingly 
+    // this will get our current phase, which will then be used in the adjustment event
+    // to match the selected pattern phase to the manager's internal patternPhase
 
-    // TODO: record module position from hardware switches
+    // TODO: create i2c slave message handler, update light pattern accordingly
 
-    // setup I2C 
-    /*
-    unsigned char messageBuf[TWI_BUFFER_SIZE];
-    unsigned char TWI_slaveAddress;  
-    TWI_slaveAddress = 0x18;
-    TWI_Slave_Initialise( (unsigned char)((TWI_slaveAddress<<TWI_ADR_BITS)));
-    TWI_Start_Transceiver(); 
-    */
+    // TODO: setup I2C slave
     
     // enable OC1A output driver
     DDRB = (1<<DDB1)|(1<<DDB2);
@@ -87,13 +63,27 @@ int main(void)
     light_pattern = 0x01;
 
     // begin main loop
+    // TODO: implement sleep mode
     while(1);
     
 }
 
-// timer1 overflow interrupt routine
-ISR(TIMER1_OVF_vect)
-{
+/*
+ISR(I2C_Message_Rx) {
+
+    // if message is a time synch cue ...
+    //  calculate current phase and store it
+
+    // if message is a pattern update ...
+    //  capture pattern and parameters
+
+}
+*/
+
+// Light animation update timer ISR 
+ISR(TIMER1_OVF_vect) {
+
+    // adjust current phase to target phase
 
     // mark time in light manager
     LightManager_tick();

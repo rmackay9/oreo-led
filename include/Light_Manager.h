@@ -5,7 +5,7 @@
 #include <avr/cpufunc.h>
 
 /*
- * light manager structure
+ * light manager state
  */
 struct _Light_Manager {
     char currPattern;
@@ -13,6 +13,7 @@ struct _Light_Manager {
     volatile uint16_t* output_b;
     int16_t counter;
     int16_t patternSpeed;
+    int16_t patternPhase;
 };
 typedef struct _Light_Manager LightManager;
 
