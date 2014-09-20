@@ -1,7 +1,3 @@
-/*
- * main.c
- */  
-
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
@@ -10,22 +6,24 @@
 #include "Light_Manager.h"
 
 
-#define IOCLK_DIV1024       (1<<CS12)|(0<<CS11)|(1<<CS10)
-#define IOCLK_DIV256        (1<<CS12)|(0<<CS11)|(0<<CS10)
-#define IOCLK_DIV64         (0<<CS12)|(1<<CS11)|(1<<CS10)
-#define IOCLK_DIV8          (0<<CS12)|(1<<CS11)|(0<<CS10)
-#define IOCLK_DIV1          (0<<CS12)|(0<<CS11)|(1<<CS10)
+#define ZERO                0x00
 
-#define COM1A_ENABLE        (1<<COM1A1)|(0<<COM1A0)
-#define COM1B_ENABLE        (1<<COM1B1)|(0<<COM1B0)
+#define TCCR0A_CLOCK_FULL   0b00000001
+#define TCCR0A_CLOCK_DIV8   0b00000010
 
-#define FASTPWM_8BIT_A      (0<<WGM11)|(1<<WGM10)
-#define FASTPWM_9BIT_A      (1<<WGM11)|(0<<WGM10)
-#define FASTPWM_10BIT_A     (1<<WGM11)|(1<<WGM10)
+#define TIMSK0_OCIE0B       0b00000100
+#define TIMSK0_OCIE0A       0b00000010
+#define TIMSK0_TOIE0        0b00000001
 
-#define FASTPWM_B           (0<<WGM13)|(1<<WGM12)
+#define TCCR1A_PWM_MODE     0b10100000
+#define TCCR1A_FAST_PWM8    0b00000001
 
-uint8_t light_pattern;
+#define TCCR1B_FAST_PWM8    0b00001000
+#define TCCR1B_CLOCK_FULL   0b00000001
+#define TCCR1B_CLOCK_DIV8   0b00000010
+
+char light_pattern;
+volatile uint8_t blueIntensity;
 
 int main(void) {
 
@@ -39,31 +37,41 @@ int main(void) {
 
     // TODO: setup I2C slave
     
-    // enable OC1A output driver
-    DDRB = (1<<DDB1)|(1<<DDB2);
-
-    // set port b pins as output
-    PORTB = 0x00;
+    // configure port B pins as output
+    DDRB    = 0xFF;
+    PORTB   = 0x00;
 
     // enable interrupts (via global mask)
     sei();
 
-    // enable PWM signal from OC1 A&B pins
-    // enable 10-bit fast PWM mode (125.25Hz)
-    TCCR1A = FASTPWM_10BIT_A | COM1B_ENABLE | COM1A_ENABLE;
-    TCCR1B = (0<<ICNC1) | (0<<ICES1) | FASTPWM_B | IOCLK_DIV8;
+    // TIMER1 Config
+    // pwm mode and waveform generation mode
+    // timer clock speed
+    TCCR1A = ZERO | TCCR1A_PWM_MODE | TCCR1A_FAST_PWM8;
+    TCCR1B = ZERO | TCCR1B_FAST_PWM8 | TCCR1B_CLOCK_DIV8;
 
-    // enable T1 interrupts
-    TIMSK1 |= 1<<TOIE1;
+    // TIMER1 Overflow interrupt enable
+    TIMSK1 = 0x01;
+
+    // TIMER0 Config
+    // Output compare mode
+    // Set timer clock speed
+    TCCR0A = ZERO | TCCR0A_CLOCK_DIV8;
     
-    // initialize the light manager
-    LightManager_init(&OCR1B, &OCR1A);
+    // TIMER0 Interrupts
+    // overflow interrupt 
+    // output compare match interrupt
+    TIMSK0 = ZERO | TIMSK0_TOIE0 | TIMSK0_OCIE0B;
 
-    // set an initial pattern
-    light_pattern = 0x01;
+    // setup light manager for Red Green and Blue LEDs
+    LightManager_init(&OCR1BL, &OCR1AL, &OCR0B);
 
-    // begin main loop
-    // TODO: implement sleep mode
+    // initialize a pattern 
+    // TODO make pattern const ENUMS
+    light_pattern = 0;
+
+    // mainloop 
+    // TODO implement sleep
     while(1);
     
 }
@@ -72,7 +80,7 @@ int main(void) {
 ISR(I2C_Message_Rx) {
 
     // if message is a time synch cue ...
-    //  calculate current phase and store it
+    //  calculate current time offset and store it
 
     // if message is a pattern update ...
     //  capture pattern and parameters
@@ -80,16 +88,31 @@ ISR(I2C_Message_Rx) {
 }
 */
 
-// Light animation update timer ISR 
+// Timer overflow interrupt routine
+//   update lighting intensities according to pattern
+//   advance time in effect animation
+//   adjust animation timer to synchronize across all lights
 ISR(TIMER1_OVF_vect) {
 
-    // adjust current phase to target phase
-
-    // mark time in light manager
-    LightManager_tick();
+    // TODO adjust timer to correct for offset
 
     // implement the currently selected pattern
     LightManager_setPattern(light_pattern);
 
+    // mark time in light manager
+    LightManager_tick();
+
 }
-    
+
+// Implement Blue LED PWM Signal 
+ISR(TIMER0_OVF_vect) {
+    // set blue LED at start of PWM cycle
+    if (OCR0B > 5) PORTB |= 0b00000001;
+    else PORTB &= 0b11111110;
+}
+
+// Implement Blue LED PWM Signal 
+ISR(TIMER0_COMPB_vect) {
+    // reset blue LED on compare match
+    PORTB &= 0b11111110;
+}

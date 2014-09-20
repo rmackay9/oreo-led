@@ -13,7 +13,7 @@ RM=rm -f
 MV=mv 
 
 # build commands
-AVRDUDE=avrdude -c dragon_isp -p attiny88
+AVRDUDE=avrdude -c dragon_isp -p attiny88 -V 
 AVROBJCOPY=avr-objcopy 
 AVRSIZE=avr-size 
 AVRGCC=avr-gcc 
