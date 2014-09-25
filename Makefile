@@ -4,7 +4,7 @@ OBJECT_DIR=build
 SRC_DIR=src
 INCLUDE_DIR=include
 OUTPUT_NAME=main
-OBJECTS=${OBJECT_DIR}/main.o ${OBJECT_DIR}/Light_Manager.o ${OBJECT_DIR}/TWI_slave.o 
+OBJECTS=${OBJECT_DIR}/main.o ${OBJECT_DIR}/Light_Manager.o
 
 # shell commands
 CP=cp 
@@ -40,9 +40,6 @@ clean:
 
 ${OBJECT_DIR}/Light_Manager.o: ${SRC_DIR}/Light_Manager.c ${INCLUDE_DIR}/Light_Manager.h
 	@${AVRGCC} ${CFLAGS} -c ${SRC_DIR}/Light_Manager.c -o ${OBJECT_DIR}/Light_Manager.o  
-
-${OBJECT_DIR}/TWI_slave.o: ${SRC_DIR}/TWI_slave.c ${INCLUDE_DIR}/TWI_slave.h
-	@${AVRGCC} ${CFLAGS} -c ${SRC_DIR}/TWI_slave.c -o ${OBJECT_DIR}/TWI_slave.o 
 
 ${OBJECT_DIR}/main.o: ${SRC_DIR}/main.c ${INCLUDE_DIR}/Light_Manager.h
 	@${AVRGCC} ${CFLAGS} -c ${SRC_DIR}/main.c -o ${OBJECT_DIR}/main.o  
