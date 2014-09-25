@@ -29,15 +29,17 @@
 #define TWCR_TWEN           0b00000100
 #define TWCR_TWIE           0b00000001
 
+#define TWI_SLAVE_ADDRESS   0xB0
+
 // TWI Stuff
-#define TWI_BUFFER_SIZE 10
-int TWI_Receiving;
+#define TWI_MAX_BUFFER_SIZE 10
+int TWI_isReceiving;
 int TWI_Ptr;
-char TWI_Buff[TWI_BUFFER_SIZE];
+char TWI_Buffer[TWI_MAX_BUFFER_SIZE];
 
 // TODO set based on physical input lines
 // use to create slave address
-char MYADDR = 0b00000001;
+char MYADDR = 0b00001000;
 
 // global light pattern variable
 // to be implemented at top of every clock cycle
@@ -46,7 +48,6 @@ LightManagerPattern light_pattern;
 // blue LED intensity proxy to ensure
 // CCM is set at top of every clock cycle
 uint8_t LEDIntensityBlue;
-
 
 
 int main(void) {
@@ -61,10 +62,8 @@ int main(void) {
     sei();
 
     // TWI Config
-    TWAR = 0xB0 | TWAR_TWGCE;
+    TWAR = TWI_SLAVE_ADDRESS | TWAR_TWGCE;
     TWCR = ZERO | TWCR_TWEA | TWCR_TWEN | TWCR_TWIE;
-
-
 
     // TIMER1 Config
     // pwm mode and waveform generation mode
@@ -76,7 +75,6 @@ int main(void) {
     // overflow interrupt 
     TIMSK1 = ZERO | TIMSK1_TOIE1;
 
-
     // TIMER0 Config
     // Output compare mode
     // Set timer clock speed
@@ -86,7 +84,6 @@ int main(void) {
     // overflow interrupt 
     // output compare match interrupt
     TIMSK0 = ZERO | TIMSK0_TOIE0 | TIMSK0_OCIE0B;
-
 
     // setup light manager for Red Green and Blue LEDs
     LightManager_init(&OCR1BL, &OCR1AL, &LEDIntensityBlue);
@@ -100,11 +97,10 @@ int main(void) {
         // adjust time to correct for phase offset
         LightManager_calcPhaseCorrection();
 
-        // TODO implement sleep
-
         // buffer parser per interface contract
-        LightManager_parseCommand(TWI_Buff);
+        LightManager_parseCommand(TWI_Buffer);
 
+        // TODO implement sleep for duty cycle manangement
 
     }
     
@@ -113,8 +109,8 @@ int main(void) {
 
 ISR(TWI_vect) {
 
-    // ignore if another light unit is being addressed
-    if ((TWSR == 0x80) && !TWI_Receiving && ((MYADDR & TWDR) != MYADDR)) {
+    // ignore message if another light unit is being addressed
+    if ((TWSR == 0x80) && !TWI_isReceiving && ((MYADDR & TWDR) != MYADDR)) {
 
         // release clock line 
         TWCR |= TWCR_TWINT;
@@ -123,6 +119,8 @@ ISR(TWI_vect) {
     //  calculate current time offset and store it
     } else if (TWSR == 0x90) {
 
+        // record the phase error for correction
+        // in mainloop
         LightManager_recordPhaseError();
 
     // record the end of a transmission if 
@@ -130,29 +128,34 @@ ISR(TWI_vect) {
     //   TODO handle condition when stopped bit missed
     } else if (TWSR == 0xA0) {
 
-        TWI_Receiving = 0;
+        // mark end of transmission
+        TWI_isReceiving = 0;
+
+        // set flag to re-parse TWI command
         LightManager_setCommandUpdated();
 
     // if this unit is being addressed
     //  start capturing pattern and parameters
-    } else if ((TWSR == 0x80) && !TWI_Receiving && ((MYADDR & TWDR) == MYADDR)) {
+    } else if ((TWSR == 0x80) && !TWI_isReceiving && ((MYADDR & TWDR) == MYADDR)) {
 
-        TWI_Receiving   = 1;
-        TWI_Ptr         = 0;
+        TWI_isReceiving     = 1;
+        TWI_Ptr             = 0;
 
     // if this unit was addressed and we're receiving
     //   data, continue capturing into buffer
-    } else if ((TWSR == 0x80) && TWI_Receiving) {
+    } else if ((TWSR == 0x80) && TWI_isReceiving) {
 
-        if (TWI_Ptr < TWI_BUFFER_SIZE) {
-            TWI_Buff[TWI_Ptr++] = TWDR;
+        // record received data 
+        // until buffer is full
+        if (TWI_Ptr < TWI_MAX_BUFFER_SIZE) {
+            TWI_Buffer[TWI_Ptr++] = TWDR;
         } else { 
-            TWI_Receiving = 0;
+            TWI_isReceiving = 0;
         }
 
     }
 
-    // release clock line
+    // always release clock line
     TWCR |= TWCR_TWINT;
 
 }
@@ -167,7 +170,8 @@ ISR(TIMER1_OVF_vect) {
     // mark time in light manager
     LightManager_tick();
 
-    LightManager_updatePhaseCorrection();
+    // refresh phase correction
+    LightManager_setPhaseCorrectionRefresh();
 
 }
 

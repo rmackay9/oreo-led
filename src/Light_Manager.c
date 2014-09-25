@@ -16,10 +16,13 @@ LightManager _manager_instance;
  */
 void LightManager_init(volatile uint8_t* output_r, volatile uint8_t* output_g, volatile uint8_t* output_b) {
 
-    _manager_instance.isCommandFresh          = 0;
-    _manager_instance.systemPhase           = 0;
-    _manager_instance.devicePhaseError      = 0;
-    _manager_instance.devicePhaseCorrection = 0;
+    // init all instance members
+    _manager_instance.skipNextTick                          = 0;
+    _manager_instance.isDevicePhaseCorrectionUpdated        = 1;
+    _manager_instance.isCommandFresh                        = 0;
+    _manager_instance.systemPhase                           = 0;
+    _manager_instance.devicePhaseError                      = 0;
+    _manager_instance.devicePhaseCorrection                 = 0;
 
     // set output channel addresses
     _manager_instance.output_r = output_r;
@@ -31,27 +34,12 @@ void LightManager_init(volatile uint8_t* output_r, volatile uint8_t* output_g, v
     *(_manager_instance.output_g) = 230;
     *(_manager_instance.output_b) = 80;
 
+    _manager_instance.patternCounter    = 0;
+    _manager_instance.patternSpeed      = 1;
+    _manager_instance.patternPhase      = 0;
+
     // init light pattern
     LightManager_setPattern(PATTERN_NONE);
-
-}
-
-void LightManager_setCommandUpdated() {
-
-    _manager_instance.isCommandFresh = 1;
-
-}
-
-void LightManager_parseCommand(char* twiCommandBuffer) {
-
-    if (_manager_instance.isCommandFresh) {
-
-        // set pattern
-        LightManager_setPattern( twiCommandBuffer[0] );
-
-    }
-
-    _manager_instance.isCommandFresh = 0;
 
 }
 
@@ -95,20 +83,37 @@ void LightManager_setSpeed(int16_t speed) {
 
 }
 
-void LightManager_recordPhaseError() {
 
-    _manager_instance.systemPhase = _manager_instance.patternCounter;
+/*
+ * Command Parsing
+ *
+ */
+
+void LightManager_setCommandUpdated() {
+
+    _manager_instance.isCommandFresh = 1;
 
 }
 
-void LightManager_tickSkip() {
-    _manager_instance.skipNextTick++;
+void LightManager_parseCommand(char* twiCommandBuffer) {
+
+    // if command is new, re-parse
+    if (_manager_instance.isCommandFresh) {
+
+        // set pattern
+        LightManager_setPattern( twiCommandBuffer[0] );
+
+    }
+
+    // signal command has been parsed
+    _manager_instance.isCommandFresh = 0;
+
 }
 
-void LightManager_updatePhaseCorrection() {
-    // recompute phase correction as soon as possible
-    _manager_instance.devicePhaseCorrectionUpdated = 0;
-}
+/*
+ * Timing Management
+ *
+ */
 
 /* 
  * update light effects time counter
@@ -129,13 +134,28 @@ void LightManager_tick() {
 
 }
 
+void LightManager_tickSkip() {
+    _manager_instance.skipNextTick++;
+
+}
+
+void LightManager_recordPhaseError() {
+
+    _manager_instance.systemPhase = _manager_instance.patternCounter;
+
+}
+
+void LightManager_setPhaseCorrectionRefresh() {
+    // recompute phase correction as soon as possible
+    _manager_instance.isDevicePhaseCorrectionUpdated = 0;
+}
 
 // proportional correction for phase error
 // limit execution to once per clock tick
 void LightManager_calcPhaseCorrection() {
 
     // phase correction already updated in this cycle
-    if (_manager_instance.devicePhaseCorrectionUpdated) return;
+    if (_manager_instance.isDevicePhaseCorrectionUpdated) return;
 
     // calculate phase error if a phase signal received
     if (_manager_instance.systemPhase != 0) {
@@ -170,9 +190,14 @@ void LightManager_calcPhaseCorrection() {
     }
 
     // phase correction has been updated
-    _manager_instance.devicePhaseCorrectionUpdated = 1;
+    _manager_instance.isDevicePhaseCorrectionUpdated = 1;
 
 }
+
+/*
+ * Light Patterns
+ *
+ */
 
 void LightManager_calc() { 
 
@@ -190,6 +215,9 @@ void LightManager_calc() {
         case PATTERN_SOLID: 
             LightManager_patternSolid(); 
             break;
+        case PATTERN_FADEIN: 
+            LightManager_patternFadeIn(); 
+            break;
         case PATTERN_NONE:
         default: 
             LightManager_patternOff();
@@ -198,15 +226,7 @@ void LightManager_calc() {
 
 }
 
-
-/*
- * Light Patterns
- *
- */
-
 void LightManager_patternOff(void) {
-
-    LightManager_setSpeed(1);
 
     *(_manager_instance.output_r) = 0; 
     *(_manager_instance.output_g) = 0; 
@@ -214,9 +234,16 @@ void LightManager_patternOff(void) {
 
 }
 
-void LightManager_patternSine(void) {
+void LightManager_patternSolid(void) {
+    
+    // update LED intensity
+    *(_manager_instance.output_r) = (uint8_t)(30); 
+    *(_manager_instance.output_g) = (uint8_t)(180); 
+    *(_manager_instance.output_b) = (uint8_t)(90); 
 
-    LightManager_setSpeed(2);
+}
+
+void LightManager_patternSine(void) {
 
     // calculate theta, in radians, from the current timer
     double theta_rad = ((double)_manager_instance.patternCounter * (double)_manager_instance.patternSpeed/PATTERN_COUNT_TOP) * 2*M_PI;
@@ -233,8 +260,6 @@ void LightManager_patternSine(void) {
 
 void LightManager_patternStrobe(void) {
 
-    LightManager_setSpeed(3);
-
     // calculate the carrier signal 
     double patternCarrier = (_manager_instance.patternCounter*_manager_instance.patternSpeed > (PATTERN_COUNT_TOP/2)) ? 0 : 1;
 
@@ -246,8 +271,6 @@ void LightManager_patternStrobe(void) {
 }
 
 void LightManager_patternSiren(void) {
-
-    LightManager_setSpeed(10);
 
     // calculate theta, in radians, from the current timer
     double theta_rad = ((double)_manager_instance.patternCounter * (double)_manager_instance.patternSpeed/PATTERN_COUNT_TOP) * 2*M_PI;
@@ -262,15 +285,24 @@ void LightManager_patternSiren(void) {
 
 }
 
-void LightManager_patternSolid(void) {
+void LightManager_patternFadeIn(void) {
 
-    LightManager_setSpeed(1);
+    LightManager_setSpeed(2);
+
+    // calculate theta, in radians, from the current timer
+    double theta_rad = ((double)_manager_instance.patternCounter * (double)_manager_instance.patternSpeed/PATTERN_COUNT_TOP) * 2*M_PI;
+
+    // calculate the carrier signal 
+    double patternCarrier = sin(theta_rad/4);
 
     // update LED intensity
-    *(_manager_instance.output_r) = (uint8_t)(30); 
-    *(_manager_instance.output_g) = (uint8_t)(180); 
-    *(_manager_instance.output_b) = (uint8_t)(90); 
+    *(_manager_instance.output_r) = (uint8_t)(10 + (30 * patternCarrier)); 
+    *(_manager_instance.output_g) = (uint8_t)(60 + (180 * patternCarrier)); 
+    *(_manager_instance.output_b) = (uint8_t)(30 + (90 * patternCarrier)); 
+
 
 }
+
+
 
 

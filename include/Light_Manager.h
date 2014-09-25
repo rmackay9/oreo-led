@@ -4,8 +4,6 @@
 #include <avr/io.h>
 #include <avr/cpufunc.h>
 
-
-
 typedef enum _Light_Pattern {
     PATTERN_NONE, 
     PATTERN_SINE, 
@@ -18,14 +16,17 @@ typedef enum _Light_Pattern {
 
 typedef struct _Light_Manager {
 
+    // command management
     char isCommandFresh;
 
+    // timing management
     uint16_t systemPhase;
     int16_t devicePhaseError;
     int16_t devicePhaseCorrection;
     int skipNextTick;
-    int devicePhaseCorrectionUpdated;
+    int isDevicePhaseCorrectionUpdated;
 
+    // lighting effects management
     LightManagerPattern currPattern;
     uint16_t patternCounter;
     int16_t patternSpeed;
@@ -33,6 +34,7 @@ typedef struct _Light_Manager {
     volatile uint8_t* output_r;
     volatile uint8_t* output_g;
     volatile uint8_t* output_b;
+
 } LightManager;
 
 // creates a period of exactly 4s with 
@@ -40,7 +42,7 @@ typedef struct _Light_Manager {
 #define PATTERN_COUNT_BOTTOM        0
 #define PATTERN_COUNT_TOP           62500
 #define PATTERN_COUNT_INCREMENT     32
-#define PHASE_CORRECTION_THRESHOLD  1
+#define PHASE_CORRECTION_THRESHOLD  2
 
 // the manager singleton
 extern LightManager _manager_instance;
@@ -56,22 +58,9 @@ void LightManager_init(volatile uint8_t *, volatile uint8_t *, volatile uint8_t 
  */
 void LightManager_tick(void);
 void LightManager_tickSkip(void);
-
-/* 
- * 
- */
 void LightManager_recordPhaseError(void);
-
-/* 
- * 
- */
 void LightManager_calcPhaseCorrection(void);
-void LightManager_updatePhaseCorrection(void);
-
-/* 
- * calculate LED intensities
- */
-void LightManager_calc(void);
+void LightManager_setPhaseCorrectionRefresh(void);
 
 /* 
  * implement the currently selected pattern
@@ -79,14 +68,24 @@ void LightManager_calc(void);
 void LightManager_setPattern(LightManagerPattern);
 
 /* 
- * implement the sine pattern
+ * calculate LED intensities per selected
+ * pattern parameters
+ */
+void LightManager_calc(void);
+
+/* 
+ * implement the light patterns
  */
 void LightManager_patternSine(void);
 void LightManager_patternSolid(void);
 void LightManager_patternSiren(void);
 void LightManager_patternStrobe(void);
 void LightManager_patternOff(void);
+void LightManager_patternFadeIn(void);
 
+/*
+ * Command parsing
+ */
 void LightManager_setCommandUpdated(void);
 void LightManager_parseCommand(char*);
 
