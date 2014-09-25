@@ -16,22 +16,49 @@ LightManager _manager_instance;
  */
 void LightManager_init(volatile uint8_t* output_r, volatile uint8_t* output_g, volatile uint8_t* output_b) {
 
+    _manager_instance.isCommandFresh          = 0;
+    _manager_instance.systemPhase           = 0;
+    _manager_instance.devicePhaseError      = 0;
+    _manager_instance.devicePhaseCorrection = 0;
+
     // set output channel addresses
     _manager_instance.output_r = output_r;
     _manager_instance.output_g = output_g;
     _manager_instance.output_b = output_b;
 
-    // initialize output channels
+    // initialize output channels to WHITE
     *(_manager_instance.output_r) = 30;
     *(_manager_instance.output_g) = 230;
     *(_manager_instance.output_b) = 80;
+
+    // init light pattern
+    LightManager_setPattern(PATTERN_NONE);
+
+}
+
+void LightManager_setCommandUpdated() {
+
+    _manager_instance.isCommandFresh = 1;
+
+}
+
+void LightManager_parseCommand(char* twiCommandBuffer) {
+
+    if (_manager_instance.isCommandFresh) {
+
+        // set pattern
+        LightManager_setPattern( twiCommandBuffer[0] );
+
+    }
+
+    _manager_instance.isCommandFresh = 0;
 
 }
 
 /* 
  * set the current pattern
  */
-void LightManager_setPattern(char pattern) {
+void LightManager_setPattern(LightManagerPattern pattern) {
 
     // set current pattern
     _manager_instance.currPattern = pattern;
@@ -68,102 +95,182 @@ void LightManager_setSpeed(int16_t speed) {
 
 }
 
+void LightManager_recordPhaseError() {
+
+    _manager_instance.systemPhase = _manager_instance.patternCounter;
+
+}
+
+void LightManager_tickSkip() {
+    _manager_instance.skipNextTick++;
+}
+
+void LightManager_updatePhaseCorrection() {
+    // recompute phase correction as soon as possible
+    _manager_instance.devicePhaseCorrectionUpdated = 0;
+}
+
 /* 
- * updatelight effects animation
+ * update light effects time counter
  */
 void LightManager_tick() {
 
-    _manager_instance.patternCounter += _manager_instance.patternSpeed;
+    // adjust clock for phase error
+    if (_manager_instance.skipNextTick > 0) { 
+        _manager_instance.skipNextTick--;
+        return;
+    }
 
-    LightManager_setSpeed(250);
-    uint8_t patternCarrier = 120 + 120 * sin(((double)_manager_instance.patternCounter/0xFFFF) * 2*M_PI);
+    // increment lighting pattern effect clock
+    if (_manager_instance.patternCounter < PATTERN_COUNT_TOP)
+        _manager_instance.patternCounter += PATTERN_COUNT_INCREMENT;
+    else 
+        _manager_instance.patternCounter = PATTERN_COUNT_BOTTOM;
 
-    // update LED intensity
-    *(_manager_instance.output_r) = 0; //(uint8_t)(30 + (double)(5 * patternCarrier)); 
-    *(_manager_instance.output_g) = 0; //(uint8_t)(150 + (double)(20 * patternCarrier)); 
-    *(_manager_instance.output_b) = 0; 
+}
+
+
+// proportional correction for phase error
+// limit execution to once per clock tick
+void LightManager_calcPhaseCorrection() {
+
+    // phase correction already updated in this cycle
+    if (_manager_instance.devicePhaseCorrectionUpdated) return;
+
+    // calculate phase error if a phase signal received
+    if (_manager_instance.systemPhase != 0) {
+
+        // device is behind phase
+        if (_manager_instance.systemPhase >= PATTERN_COUNT_TOP/2) {
+            _manager_instance.devicePhaseError = (_manager_instance.systemPhase - PATTERN_COUNT_TOP) / PATTERN_COUNT_INCREMENT;
+
+        // device is ahead of phase
+        } else {
+            _manager_instance.devicePhaseError = _manager_instance.systemPhase / PATTERN_COUNT_INCREMENT;
+        }
+
+        // do not calculate phaseError again until another phase signal received
+        _manager_instance.systemPhase = 0;
+
+    }
+
+    // only apply correction if magnitude is greater than threshold
+    if (fabs(_manager_instance.devicePhaseError) >= PHASE_CORRECTION_THRESHOLD) { 
+
+        // if phase error negative, add an extra clock tick
+        // if positive, remove a clock tick
+        if (_manager_instance.devicePhaseError < 0) {
+            LightManager_tick();
+            _manager_instance.devicePhaseError++;
+        } else {
+            LightManager_tickSkip();
+            _manager_instance.devicePhaseError--;
+        }        
+        
+    }
+
+    // phase correction has been updated
+    _manager_instance.devicePhaseCorrectionUpdated = 1;
+
+}
+
+void LightManager_calc() { 
+
+    switch(_manager_instance.currPattern) {
+
+        case PATTERN_SINE: 
+            LightManager_patternSine(); 
+            break;
+        case PATTERN_STROBE: 
+            LightManager_patternStrobe(); 
+            break;
+        case PATTERN_SIREN: 
+            LightManager_patternSiren(); 
+            break;
+        case PATTERN_SOLID: 
+            LightManager_patternSolid(); 
+            break;
+        case PATTERN_NONE:
+        default: 
+            LightManager_patternOff();
+
+    }
 
 }
 
 
 /*
- * Light_Pattern 
+ * Light Patterns
  *
  */
 
-/*
-uint8_t LightPattern_calculateRotatingBreath(DeviceState device) {
+void LightManager_patternOff(void) {
 
-    // pattern speed
-    LightManager_setSpeed(250);
+    LightManager_setSpeed(1);
 
-    // pattern device phase angles
-    LightPhaseArray patternPhases = {0, 90, 180, 270};
-
-    // set the phase according to this device's installed position
-    LightManager_setPhase(patternPhases[device.installedPosition]);
-
-    float t = (float)_manager_instance.counter/0xFFFF;
-    float p = patternPhases[device.installedPosition]/360
-
-    uint8_t output = 100 + 50 * sin((p + t) * 2*M_PI);
-
-    return output;
+    *(_manager_instance.output_r) = 0; 
+    *(_manager_instance.output_g) = 0; 
+    *(_manager_instance.output_b) = 10; 
 
 }
 
-uint8_t LightPattern_calculateStrobe(DeviceState device) {
+void LightManager_patternSine(void) {
 
-    // pattern speed
-    LightManager_setSpeed(250);
+    LightManager_setSpeed(2);
 
-    // pattern device phases
-    LightPhaseArray patternPhases = {0, 0, 0, 0};
+    // calculate theta, in radians, from the current timer
+    double theta_rad = ((double)_manager_instance.patternCounter * (double)_manager_instance.patternSpeed/PATTERN_COUNT_TOP) * 2*M_PI;
 
-    // set the phase according to this device's installed position
-    LightManager_setPhase(patternPhases[device.installedPosition]);
+    // calculate the carrier signal 
+    double patternCarrier = sin(theta_rad);
 
-
-    uint8_t output = 100 + 50 * fabs(sin(((float)_manager_instance.counter/0xFFFF) * 2*M_PI));
-
-    return output;
-
-}
-
-uint8_t LightPattern_calculateBreathe(void) {
-
-    // pattern speed
-    LightManager_setSpeed(0x0100);
-
-    // pattern device phases
-    //LightPhaseArray patternPhases = {0, 0, 0, 0};
-
-    // set the phase according to this device's installed position
-    //LightManager_setPhase(patternPhases[device.installedPosition]);
-
-
-    uint8_t output = 50.0 * sin(((float)_manager_instance.patternCounter/0xFFFF) * 2*M_PI);
-
-    return output;
+    // update LED intensity
+    *(_manager_instance.output_r) = (uint8_t)(30 + (double)(10 * patternCarrier)); 
+    *(_manager_instance.output_g) = (uint8_t)(180 + (double)(60 * patternCarrier)); 
+    *(_manager_instance.output_b) = (uint8_t)(90 + (double)(30 * patternCarrier)); 
 
 }
 
-uint8_t LightPattern_calculateAlternatingStrobe(DeviceState device) {
+void LightManager_patternStrobe(void) {
 
-    // pattern speed
-    LightManager_setSpeed(250);
+    LightManager_setSpeed(3);
 
-    // pattern device phases
-    LightPhaseArray patternPhases = {0, 0, 180, 180};
+    // calculate the carrier signal 
+    double patternCarrier = (_manager_instance.patternCounter*_manager_instance.patternSpeed > (PATTERN_COUNT_TOP/2)) ? 0 : 1;
 
-    // set the phase according to this device's installed position
-    LightManager_setPhase(patternPhases[device.installedPosition]);
-
-
-    uint8_t output = 100 + 50 * abs(sin(((float)_manager_instance.counter/0xFFFF) * 2*M_PI));
-
-    return output;
+    // update LED intensity
+    *(_manager_instance.output_r) = (uint8_t)(10 + (30 * patternCarrier)); 
+    *(_manager_instance.output_g) = (uint8_t)(60 + (180 * patternCarrier)); 
+    *(_manager_instance.output_b) = (uint8_t)(30 + (90 * patternCarrier)); 
 
 }
-*/
+
+void LightManager_patternSiren(void) {
+
+    LightManager_setSpeed(10);
+
+    // calculate theta, in radians, from the current timer
+    double theta_rad = ((double)_manager_instance.patternCounter * (double)_manager_instance.patternSpeed/PATTERN_COUNT_TOP) * 2*M_PI;
+
+    // calculate the carrier signal 
+    double patternCarrier = 0.8 + 0.3 * sin(tan(theta_rad)*0.75);
+
+    // update LED intensity
+    *(_manager_instance.output_r) = (uint8_t)(10 + (double)(30 * patternCarrier)); 
+    *(_manager_instance.output_g) = (uint8_t)(60 + (double)(180 * patternCarrier)); 
+    *(_manager_instance.output_b) = (uint8_t)(30 + (double)(90 * patternCarrier)); 
+
+}
+
+void LightManager_patternSolid(void) {
+
+    LightManager_setSpeed(1);
+
+    // update LED intensity
+    *(_manager_instance.output_r) = (uint8_t)(30); 
+    *(_manager_instance.output_g) = (uint8_t)(180); 
+    *(_manager_instance.output_b) = (uint8_t)(90); 
+
+}
+
 
