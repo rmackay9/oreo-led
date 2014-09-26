@@ -250,7 +250,7 @@ void LightManager_setPhaseCorrectionRefresh() {
     _manager_instance.isDevicePhaseCorrectionUpdated = 0;
 }
 
-// proportional correction for phase error
+// calculate correction for phase error
 // limit execution to once per clock tick
 void LightManager_calcPhaseCorrection() {
 
