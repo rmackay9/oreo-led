@@ -92,7 +92,7 @@ void LightManager_setPhase(int16_t phase) {
 /* 
  * set the speed
  */
-void LightManager_setSpeed(int16_t speed) {
+void LightManager_setSpeed(double speed) {
 
     // set speed
     _manager_instance.patternSpeed = speed;
@@ -104,25 +104,109 @@ void LightManager_setSpeed(int16_t speed) {
  * Command Parsing
  *
  */
-
 void LightManager_setCommandUpdated() {
 
     _manager_instance.isCommandFresh = 1;
 
 }
 
-void LightManager_parseCommand(char* twiCommandBuffer) {
+void LightManager_parseCommand(char* twiCommandBuffer, int size) {
 
     // if command is new, re-parse
-    if (_manager_instance.isCommandFresh) {
+    // ensure valid length buffer
+    // ensure pointer is valid
+    if (twiCommandBuffer && 
+        size > 0 &&
+        _manager_instance.isCommandFresh) {
 
         // set pattern
         LightManager_setPattern( twiCommandBuffer[0] );
+
+        // cycle through remaining params
+        // beginning with first param (following pattern byte)
+        int buffer_pointer = 1;
+        while (buffer_pointer < size) {
+
+            // digest parameters serially
+            LightParameter currParam;
+
+            // ensure parameter is valid, stop parsing if invalid
+            //    this means that part of a message can be parsed, until
+            //    an invalid parameter is seen
+            if (twiCommandBuffer[buffer_pointer] < PARAM_ENUM_COUNT &&
+                twiCommandBuffer[buffer_pointer] >= 0) {
+
+                currParam = twiCommandBuffer[buffer_pointer];
+
+            } else {
+
+                break;
+
+            }
+
+            // get size of parameter value
+            int paramSize = LightParameterSize[currParam];
+
+            // ensure buffer is long enough
+            //   stop parsing if remaining buffer length does 
+            //   not have enough room for this parameter
+            //   ('size-1' accounts for pattern byte)
+            if (buffer_pointer + paramSize > size-1) break;
+
+            // implement parameter+value update 
+            //process(currParam, start, stop, buffer);
+            LightManager_processParameterUpdate(currParam, buffer_pointer+1, twiCommandBuffer);
+
+            // advance pointer
+            buffer_pointer += paramSize + 1;
+
+        }
+
 
     }
 
     // signal command has been parsed
     _manager_instance.isCommandFresh = 0;
+
+}
+
+void LightManager_processParameterUpdate(LightParameter param, int start, char* buffer) {
+
+    // validate arguments
+    if (!buffer) return;
+
+    switch(param) {
+
+        case PARAM_RED: 
+            _manager_instance.redRelativeIntensity = buffer[start];
+            break;
+
+        case PARAM_GREEN: 
+            _manager_instance.greenRelativeIntensity = buffer[start];
+            break;
+
+        case PARAM_BLUE: 
+            _manager_instance.blueRelativeIntensity = buffer[start];
+            break;
+
+        case PARAM_HUE: 
+            break;
+        case PARAM_SATURATION: 
+            break;
+        case PARAM_BRIGHTNESS: 
+            break;
+
+        case PARAM_PERIOD: 
+            LightManager_setSpeed(4000.0 /  ( ( (0x00FF & (int)buffer[start]) << 8) | (0x00FF & (int)buffer[start+1]) ) ); 
+            break;
+
+        case PARAM_REPEAT: 
+            break;
+        case PARAM_PHASEOFFSET: 
+            break;
+        default:
+            break;
+    }
 
 }
 
