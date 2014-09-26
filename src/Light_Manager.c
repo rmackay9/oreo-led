@@ -345,23 +345,33 @@ void LightManager_patternSolid(void) {
 
 void LightManager_patternSine(void) {
 
+ 
     // calculate theta, in radians, from the current timer
-    double theta_rad = ((double)_manager_instance.patternCounter * (double)_manager_instance.patternSpeed/PATTERN_COUNT_TOP) * 2*M_PI;
+    double theta_rad = ((double)_manager_instance.patternCounter/PATTERN_COUNT_TOP) * _manager_instance.patternSpeed * 2*M_PI;
 
     // calculate the carrier signal 
     double patternCarrier = sin(theta_rad);
 
-    // update LED intensity
-    *(_manager_instance.output_r) = (uint8_t)(30 + (double)(10 * patternCarrier)); 
-    *(_manager_instance.output_g) = (uint8_t)(180 + (double)(60 * patternCarrier)); 
-    *(_manager_instance.output_b) = (uint8_t)(90 + (double)(30 * patternCarrier)); 
+    // update LED intensities
+    *(_manager_instance.output_r) = (uint8_t)(_manager_instance.redRelativeIntensity + 
+        (double)(_manager_instance.redRelativeIntensity * 0.3 * patternCarrier)); 
+
+    *(_manager_instance.output_g) = (uint8_t)(_manager_instance.greenRelativeIntensity + 
+        (double)(_manager_instance.greenRelativeIntensity * 0.3 * patternCarrier)); 
+
+    *(_manager_instance.output_b) = (uint8_t)(_manager_instance.blueRelativeIntensity + 
+        (double)(_manager_instance.blueRelativeIntensity * 0.3 * patternCarrier)); 
+
 
 }
 
 void LightManager_patternStrobe(void) {
 
+    // calculate theta, in radians, from the current timer
+    double theta_rad = ((double)_manager_instance.patternCounter/PATTERN_COUNT_TOP) * _manager_instance.patternSpeed * 2*M_PI;
+
     // calculate the carrier signal 
-    double patternCarrier = (_manager_instance.patternCounter*_manager_instance.patternSpeed > (PATTERN_COUNT_TOP/2)) ? 0 : 1;
+    double patternCarrier = (sin(theta_rad) > 0) ? 1 : 0;
 
     // update LED intensity
     *(_manager_instance.output_r) = (uint8_t)(10 + (30 * patternCarrier)); 
@@ -373,7 +383,7 @@ void LightManager_patternStrobe(void) {
 void LightManager_patternSiren(void) {
 
     // calculate theta, in radians, from the current timer
-    double theta_rad = ((double)_manager_instance.patternCounter * (double)_manager_instance.patternSpeed/PATTERN_COUNT_TOP) * 2*M_PI;
+    double theta_rad = ((double)_manager_instance.patternCounter/PATTERN_COUNT_TOP) * _manager_instance.patternSpeed * 2*M_PI;
 
     // calculate the carrier signal 
     double patternCarrier = 0.8 + 0.3 * sin(tan(theta_rad)*0.75);
@@ -387,10 +397,8 @@ void LightManager_patternSiren(void) {
 
 void LightManager_patternFadeIn(void) {
 
-    LightManager_setSpeed(2);
-
     // calculate theta, in radians, from the current timer
-    double theta_rad = ((double)_manager_instance.patternCounter * (double)_manager_instance.patternSpeed/PATTERN_COUNT_TOP) * 2*M_PI;
+    double theta_rad = ((double)_manager_instance.patternCounter/PATTERN_COUNT_TOP) * _manager_instance.patternSpeed * 2*M_PI;
 
     // calculate the carrier signal 
     double patternCarrier = sin(theta_rad/4);
@@ -400,9 +408,4 @@ void LightManager_patternFadeIn(void) {
     *(_manager_instance.output_g) = (uint8_t)(60 + (180 * patternCarrier)); 
     *(_manager_instance.output_b) = (uint8_t)(30 + (90 * patternCarrier)); 
 
-
 }
-
-
-
-

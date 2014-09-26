@@ -32,14 +32,14 @@
 #define TWI_SLAVE_ADDRESS   0xB0
 
 // TWI Stuff
-#define TWI_MAX_BUFFER_SIZE 10
+#define TWI_MAX_BUFFER_SIZE 50
 int TWI_isReceiving;
 int TWI_Ptr;
 char TWI_Buffer[TWI_MAX_BUFFER_SIZE];
 
 // TODO set based on physical input lines
 // use to create slave address
-char MYADDR = 0b00001000;
+char MYADDR = 0b00000010;
 
 // global light pattern variable
 // to be implemented at top of every clock cycle
@@ -98,7 +98,7 @@ int main(void) {
         LightManager_calcPhaseCorrection();
 
         // buffer parser per interface contract
-        LightManager_parseCommand(TWI_Buffer);
+        LightManager_parseCommand(TWI_Buffer, TWI_Ptr);
 
         // TODO implement sleep for duty cycle manangement
 
