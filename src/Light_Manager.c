@@ -200,6 +200,7 @@ void LightManager_processParameterUpdate(LightParameter param, int start, char* 
             break;
 
         case PARAM_PERIOD: 
+            // TODO #define the LCD period
             LightManager_setSpeed(4000.0 / LightManager_charToInt(buffer[start], buffer[start+1])); 
             break;
 
