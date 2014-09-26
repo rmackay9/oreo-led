@@ -4,6 +4,19 @@
 #include <avr/io.h>
 #include <avr/cpufunc.h>
 
+typedef enum _Light_Parameter {
+    PARAM_RED,
+    PARAM_GREEN,
+    PARAM_BLUE,
+    PARAM_HUE,
+    PARAM_SATURATION,
+    PARAM_BRIGHTNESS,
+    PARAM_PERIOD,
+    PARAM_REPEAT,
+    PARAM_PHASEOFFSET,
+    PARAM_ENUM_COUNT
+} LightParameter;
+
 typedef enum _Light_Pattern {
     PATTERN_NONE, 
     PATTERN_SINE, 
@@ -11,7 +24,9 @@ typedef enum _Light_Pattern {
     PATTERN_SIREN,
     PATTERN_STROBE,
     PATTERN_FADEIN, 
-    PATTERN_FADEOUT
+    PATTERN_FADEOUT,
+    PATTERN_COLORCYCLE,
+    PATTERN_ENUM_COUNT
 } LightManagerPattern;
 
 typedef struct _Light_Manager {
