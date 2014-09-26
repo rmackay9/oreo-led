@@ -55,7 +55,7 @@ void LightManager_init(volatile uint8_t* output_r, volatile uint8_t* output_g, v
     _manager_instance.patternPhase      = 0;
 
     // init light pattern
-    LightManager_setPattern(PATTERN_NONE);
+    LightManager_setPattern(PATTERN_OFF);
 
 }
 
@@ -63,6 +63,8 @@ void LightManager_init(volatile uint8_t* output_r, volatile uint8_t* output_g, v
  * set the current pattern
  */
 void LightManager_setPattern(LightManagerPattern pattern) {
+
+
 
     // set current pattern
     _manager_instance.currPattern = pattern;
@@ -119,8 +121,9 @@ void LightManager_parseCommand(char* twiCommandBuffer, int size) {
         size > 0 &&
         _manager_instance.isCommandFresh) {
 
-        // set pattern
-        LightManager_setPattern( twiCommandBuffer[0] );
+        // set pattern if command is not a param-only command
+        if (twiCommandBuffer[0] != PATTERN_PARAMUPDATE)
+            LightManager_setPattern( twiCommandBuffer[0] );
 
         // cycle through remaining params
         // beginning with first param (following pattern byte)
@@ -197,7 +200,7 @@ void LightManager_processParameterUpdate(LightParameter param, int start, char* 
             break;
 
         case PARAM_PERIOD: 
-            LightManager_setSpeed(4000.0 /  ( ( (0x00FF & (int)buffer[start]) << 8) | (0x00FF & (int)buffer[start+1]) ) ); 
+            LightManager_setSpeed(4000.0 / LightManager_charToInt(buffer[start], buffer[start+1])); 
             break;
 
         case PARAM_REPEAT: 
@@ -208,6 +211,10 @@ void LightManager_processParameterUpdate(LightParameter param, int start, char* 
             break;
     }
 
+}
+
+uint16_t LightManager_charToInt(char msb, char lsb) {
+    return ( ( (0x00FF & (uint16_t)msb) << 8) | (0x00FF & (uint16_t)lsb) );
 }
 
 /*
@@ -298,9 +305,10 @@ void LightManager_calcPhaseCorrection() {
  * Light Patterns
  *
  */
-
 void LightManager_calc() { 
 
+    // update light intensity target values
+    // which the LEDs will be commanded to meet
     switch(_manager_instance.currPattern) {
 
         case PATTERN_SINE: 
@@ -315,14 +323,23 @@ void LightManager_calc() {
         case PATTERN_SOLID: 
             LightManager_patternSolid(); 
             break;
+        case PATTERN_FADEOUT: 
+            LightManager_patternFadeOut(); 
+            break;
         case PATTERN_FADEIN: 
             LightManager_patternFadeIn(); 
             break;
-        case PATTERN_NONE:
+        case PATTERN_COLORCYCLE: 
+            LightManager_patternColorCycle(); 
+            break;
+        case PATTERN_OFF:
         default: 
             LightManager_patternOff();
 
     }
+
+    // TODO update physical output channels per
+    // the calculated intensity target values
 
 }
 
@@ -407,5 +424,13 @@ void LightManager_patternFadeIn(void) {
     *(_manager_instance.output_r) = (uint8_t)(10 + (30 * patternCarrier)); 
     *(_manager_instance.output_g) = (uint8_t)(60 + (180 * patternCarrier)); 
     *(_manager_instance.output_b) = (uint8_t)(30 + (90 * patternCarrier)); 
+
+}
+
+void LightManager_patternFadeOut(void) {
+
+}
+
+void LightManager_patternColorCycle(void) {
 
 }

@@ -18,7 +18,7 @@ typedef enum _Light_Parameter {
 } LightParameter;
 
 typedef enum _Light_Pattern {
-    PATTERN_NONE, 
+    PATTERN_OFF, 
     PATTERN_SINE, 
     PATTERN_SOLID,
     PATTERN_SIREN,
@@ -26,6 +26,7 @@ typedef enum _Light_Pattern {
     PATTERN_FADEIN, 
     PATTERN_FADEOUT,
     PATTERN_COLORCYCLE,
+    PATTERN_PARAMUPDATE, 
     PATTERN_ENUM_COUNT
 } LightManagerPattern;
 
@@ -107,6 +108,8 @@ void LightManager_patternSiren(void);
 void LightManager_patternStrobe(void);
 void LightManager_patternOff(void);
 void LightManager_patternFadeIn(void);
+void LightManager_patternFadeOut(void);
+void LightManager_patternColorCycle(void);
 
 /*
  * Command parsing
@@ -114,5 +117,6 @@ void LightManager_patternFadeIn(void);
 void LightManager_setCommandUpdated(void);
 void LightManager_parseCommand(char*, int);
 void LightManager_processParameterUpdate(LightParameter, int, char*);
+uint16_t LightManager_charToInt(char, char);
 
 #endif
