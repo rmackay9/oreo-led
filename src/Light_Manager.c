@@ -8,6 +8,18 @@
 #include "Light_Manager.h"
 #include "math.h"
 
+const short int LightParameterSize[PARAM_ENUM_COUNT] = {
+    1, // Colors RGB
+    1,
+    1,
+    1, // Colors HSB
+    1,
+    1,
+    2, // Period
+    1, // Repeat
+    2  // Phase Offset
+};
+
 LightManager _manager_instance;
 
 /*
@@ -30,9 +42,13 @@ void LightManager_init(volatile uint8_t* output_r, volatile uint8_t* output_g, v
     _manager_instance.output_b = output_b;
 
     // initialize output channels to WHITE
-    *(_manager_instance.output_r) = 30;
-    *(_manager_instance.output_g) = 230;
-    *(_manager_instance.output_b) = 80;
+    *(_manager_instance.output_r) = 0; 
+    *(_manager_instance.output_g) = 0; 
+    *(_manager_instance.output_b) = 10; 
+
+    _manager_instance.redRelativeIntensity      = 30;
+    _manager_instance.greenRelativeIntensity    = 230;
+    _manager_instance.blueRelativeIntensity     = 80;
 
     _manager_instance.patternCounter    = 0;
     _manager_instance.patternSpeed      = 1;

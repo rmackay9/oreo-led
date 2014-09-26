@@ -41,14 +41,24 @@ typedef struct _Light_Manager {
     int skipNextTick;
     int isDevicePhaseCorrectionUpdated;
 
-    // lighting effects management
+    // lighting effects pattern management
     LightManagerPattern currPattern;
-    uint16_t patternCounter;
-    int16_t patternSpeed;
+    uint32_t patternCounter;
+    double patternSpeed;
     uint16_t patternPhase;
+    uint8_t patternCyclesRemaining; 
+
+    // led management
+    uint8_t redRelativeIntensity;
+    uint8_t blueRelativeIntensity;
+    uint8_t greenRelativeIntensity;
     volatile uint8_t* output_r;
     volatile uint8_t* output_g;
     volatile uint8_t* output_b;
+    uint8_t hue;
+    uint8_t saturation;
+    uint8_t brightness;
+    
 
 } LightManager;
 
@@ -102,6 +112,7 @@ void LightManager_patternFadeIn(void);
  * Command parsing
  */
 void LightManager_setCommandUpdated(void);
-void LightManager_parseCommand(char*);
+void LightManager_parseCommand(char*, int);
+void LightManager_processParameterUpdate(LightParameter, int, char*);
 
 #endif
