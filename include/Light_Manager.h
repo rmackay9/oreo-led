@@ -32,6 +32,8 @@ typedef enum _Light_Pattern {
 
 typedef struct _Light_Manager {
 
+    uint8_t deviceId;
+
     // command management
     char isCommandFresh;
 
@@ -53,9 +55,14 @@ typedef struct _Light_Manager {
     uint8_t redRelativeIntensity;
     uint8_t blueRelativeIntensity;
     uint8_t greenRelativeIntensity;
+
+    uint8_t output_target_r;
+    uint8_t output_target_g;
+    uint8_t output_target_b;
     volatile uint8_t* output_r;
     volatile uint8_t* output_g;
     volatile uint8_t* output_b;
+
     uint8_t hue;
     uint8_t saturation;
     uint8_t brightness;
@@ -98,7 +105,7 @@ void LightManager_setPattern(LightManagerPattern);
  * pattern parameters
  */
 void LightManager_calc(void);
-
+void LightManager_setLEDChannels(void);
 /* 
  * implement the light patterns
  */
@@ -111,6 +118,10 @@ void LightManager_patternFadeIn(void);
 void LightManager_patternFadeOut(void);
 void LightManager_patternColorCycle(void);
 
+
+void LightManager_setDeviceId(int8_t);
+char LightManager_getDeviceIdMask(void);
+
 /*
  * Command parsing
  */
@@ -118,5 +129,4 @@ void LightManager_setCommandUpdated(void);
 void LightManager_parseCommand(char*, int);
 void LightManager_processParameterUpdate(LightParameter, int, char*);
 uint16_t LightManager_charToInt(char, char);
-
 #endif

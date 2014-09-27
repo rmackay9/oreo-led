@@ -101,6 +101,21 @@ void LightManager_setSpeed(double speed) {
 
 }
 
+void LightManager_setDeviceId(int8_t id) {
+
+    // set counter
+    _manager_instance.deviceId = id;
+
+}
+
+char LightManager_getDeviceIdMask() {
+
+    if (_manager_instance.deviceId)
+        return (0x00 | (1 << (_manager_instance.deviceId - 1)));
+    else 
+        return 0x00;
+
+}
 
 /*
  * Command Parsing
@@ -204,9 +219,13 @@ void LightManager_processParameterUpdate(LightParameter param, int start, char* 
             break;
 
         case PARAM_REPEAT: 
+            _manager_instance.patternCyclesRemaining = buffer[start];
             break;
+
         case PARAM_PHASEOFFSET: 
+            LightManager_setPhase(LightManager_charToInt(buffer[start], buffer[start+1]));
             break;
+
         default:
             break;
     }
@@ -338,25 +357,26 @@ void LightManager_calc() {
 
     }
 
-    // TODO update physical output channels per
+    // update physical output channels per
     // the calculated intensity target values
+    LightManager_setLEDChannels();
 
 }
 
 void LightManager_patternOff(void) {
 
-    *(_manager_instance.output_r) = 0; 
-    *(_manager_instance.output_g) = 0; 
-    *(_manager_instance.output_b) = 10; 
+    _manager_instance.output_target_r = 0; 
+    _manager_instance.output_target_g = 0; 
+    _manager_instance.output_target_b = 10; 
 
 }
 
 void LightManager_patternSolid(void) {
     
     // update LED intensity
-    *(_manager_instance.output_r) = (uint8_t)(30); 
-    *(_manager_instance.output_g) = (uint8_t)(180); 
-    *(_manager_instance.output_b) = (uint8_t)(90); 
+    _manager_instance.output_target_r = _manager_instance.redRelativeIntensity; 
+    _manager_instance.output_target_g = _manager_instance.greenRelativeIntensity; 
+    _manager_instance.output_target_b = _manager_instance.blueRelativeIntensity; 
 
 }
 
@@ -367,18 +387,17 @@ void LightManager_patternSine(void) {
     double theta_rad = ((double)_manager_instance.patternCounter/PATTERN_COUNT_TOP) * _manager_instance.patternSpeed * 2*M_PI;
 
     // calculate the carrier signal 
-    double patternCarrier = sin(theta_rad);
+    double patternCarrier = sin(theta_rad + _manager_instance.deviceId * (double)_manager_instance.patternPhase/180.0 * M_PI );
 
     // update LED intensities
-    *(_manager_instance.output_r) = (uint8_t)(_manager_instance.redRelativeIntensity + 
+    _manager_instance.output_target_r = (_manager_instance.redRelativeIntensity + 
         (double)(_manager_instance.redRelativeIntensity * 0.3 * patternCarrier)); 
 
-    *(_manager_instance.output_g) = (uint8_t)(_manager_instance.greenRelativeIntensity + 
+    _manager_instance.output_target_g = (_manager_instance.greenRelativeIntensity + 
         (double)(_manager_instance.greenRelativeIntensity * 0.3 * patternCarrier)); 
 
-    *(_manager_instance.output_b) = (uint8_t)(_manager_instance.blueRelativeIntensity + 
+    _manager_instance.output_target_b = (_manager_instance.blueRelativeIntensity + 
         (double)(_manager_instance.blueRelativeIntensity * 0.3 * patternCarrier)); 
-
 
 }
 
@@ -391,9 +410,9 @@ void LightManager_patternStrobe(void) {
     double patternCarrier = (sin(theta_rad) > 0) ? 1 : 0;
 
     // update LED intensity
-    *(_manager_instance.output_r) = (uint8_t)(10 + (30 * patternCarrier)); 
-    *(_manager_instance.output_g) = (uint8_t)(60 + (180 * patternCarrier)); 
-    *(_manager_instance.output_b) = (uint8_t)(30 + (90 * patternCarrier)); 
+    _manager_instance.output_target_r = (uint8_t)(10 + (30 * patternCarrier)); 
+    _manager_instance.output_target_g = (uint8_t)(60 + (180 * patternCarrier)); 
+    _manager_instance.output_target_b = (uint8_t)(30 + (90 * patternCarrier)); 
 
 }
 
@@ -406,9 +425,9 @@ void LightManager_patternSiren(void) {
     double patternCarrier = 0.8 + 0.3 * sin(tan(theta_rad)*0.75);
 
     // update LED intensity
-    *(_manager_instance.output_r) = (uint8_t)(10 + (double)(30 * patternCarrier)); 
-    *(_manager_instance.output_g) = (uint8_t)(60 + (double)(180 * patternCarrier)); 
-    *(_manager_instance.output_b) = (uint8_t)(30 + (double)(90 * patternCarrier)); 
+    _manager_instance.output_target_r = (uint8_t)(10 + (double)(30 * patternCarrier)); 
+    _manager_instance.output_target_g = (uint8_t)(60 + (double)(180 * patternCarrier)); 
+    _manager_instance.output_target_b = (uint8_t)(30 + (double)(90 * patternCarrier)); 
 
 }
 
@@ -421,9 +440,9 @@ void LightManager_patternFadeIn(void) {
     double patternCarrier = sin(theta_rad/4);
 
     // update LED intensity
-    *(_manager_instance.output_r) = (uint8_t)(10 + (30 * patternCarrier)); 
-    *(_manager_instance.output_g) = (uint8_t)(60 + (180 * patternCarrier)); 
-    *(_manager_instance.output_b) = (uint8_t)(30 + (90 * patternCarrier)); 
+    _manager_instance.output_target_r = (uint8_t)(10 + (30 * patternCarrier)); 
+    _manager_instance.output_target_g = (uint8_t)(60 + (180 * patternCarrier)); 
+    _manager_instance.output_target_b = (uint8_t)(30 + (90 * patternCarrier)); 
 
 }
 
@@ -434,3 +453,25 @@ void LightManager_patternFadeOut(void) {
 void LightManager_patternColorCycle(void) {
 
 }
+
+void LightManager_setLEDChannels(void) {
+/*
+    if (_manager_instance.output_target_r > 240) *(_manager_instance.output_r) = 240;
+    else *(_manager_instance.output_r) = _manager_instance.output_target_r;
+
+    if (_manager_instance.output_target_g > 240) *(_manager_instance.output_g) = 240;
+    else *(_manager_instance.output_g) = _manager_instance.output_target_g;
+
+    if (_manager_instance.output_target_b > 240) *(_manager_instance.output_b) = 240;
+    else *(_manager_instance.output_b) = _manager_instance.output_target_b;
+
+    if (_manager_instance.output_target_b < 15) *(_manager_instance.output_b) = 15;
+    else *(_manager_instance.output_b) = _manager_instance.output_target_b;
+*/
+
+    *(_manager_instance.output_r) = _manager_instance.output_target_r;
+    *(_manager_instance.output_g) = _manager_instance.output_target_g;
+    *(_manager_instance.output_b) = _manager_instance.output_target_b;
+
+}
+

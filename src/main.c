@@ -33,13 +33,12 @@
 
 // TWI Stuff
 #define TWI_MAX_BUFFER_SIZE 50
-int TWI_isReceiving;
+int TWI_isSelected;
 int TWI_Ptr;
 char TWI_Buffer[TWI_MAX_BUFFER_SIZE];
 
-// TODO set based on physical input lines
 // use to create slave address
-char MYADDR = 0b00000010;
+char myTwiSubAddr;
 
 // global light pattern variable
 // to be implemented at top of every clock cycle
@@ -88,6 +87,10 @@ int main(void) {
     // setup light manager for Red Green and Blue LEDs
     LightManager_init(&OCR1BL, &OCR1AL, &LEDIntensityBlue);
 
+    // TODO set based on physical input lines
+    LightManager_setDeviceId(2);
+    myTwiSubAddr = LightManager_getDeviceIdMask();
+
     // mainloop 
     while(1) {
 
@@ -106,18 +109,28 @@ int main(void) {
     
 }
 
+#define TWI_SLAW_RCVD       (TWSR == 0x60) 
+#define TWI_SLAR_RCVD       (TWSR == 0xA8) 
+#define TWI_SLAW_DATA_RCVD  (TWSR == 0x80) 
+#define TWI_GENCALL_RCVD    (TWSR == 0x90) // TODO should be 0x70?
+#define TWI_STOP_RCVD       (TWSR == 0xA0) 
+int TWI_isCombinedFormat = 0;
+int TWI_isSubAddrByte = 0;
 
+// TODO combine all flags to a bit mask pattern?
 ISR(TWI_vect) {
 
     // ignore message if another light unit is being addressed
-    if ((TWSR == 0x80) && !TWI_isReceiving && ((MYADDR & TWDR) != MYADDR)) {
+    if (TWI_SLAW_DATA_RCVD && 
+        !TWI_isSubAddrByte && 
+        !TWI_isSelected) {
 
         // release clock line 
         TWCR |= TWCR_TWINT;
 
     // if message is a time synch cue (general call)
     //  calculate current time offset and store it
-    } else if (TWSR == 0x90) {
+    } else if (TWI_GENCALL_RCVD) {
 
         // record the phase error for correction
         // in mainloop
@@ -126,31 +139,54 @@ ISR(TWI_vect) {
     // record the end of a transmission if 
     //   stop bit received
     //   TODO handle condition when stopped bit missed
-    } else if (TWSR == 0xA0) {
+    } else if (TWI_STOP_RCVD) {
+
+        // if this is a repeated-start,
+        // answer the next SLA+R
+        if (!TWI_isCombinedFormat) {
+            // set flag to re-parse TWI command
+            LightManager_setCommandUpdated();
+        } 
 
         // mark end of transmission
-        TWI_isReceiving = 0;
+        TWI_isSelected = 0;
 
-        // set flag to re-parse TWI command
-        LightManager_setCommandUpdated();
+    // every message with begin here, so reset all flags
+    } else if (TWI_SLAW_RCVD) {
+
+        TWI_isCombinedFormat    = 0;
+        TWI_isSelected          = 0;
+        TWI_isSubAddrByte       = 1;
 
     // if this unit is being addressed
     //  start capturing pattern and parameters
-    } else if ((TWSR == 0x80) && !TWI_isReceiving && ((MYADDR & TWDR) == MYADDR)) {
+    } else if (TWI_SLAW_DATA_RCVD && TWI_isSubAddrByte) {
 
-        TWI_isReceiving     = 1;
-        TWI_Ptr             = 0;
+        if ((myTwiSubAddr & TWDR) == myTwiSubAddr) {
+
+            TWI_isSelected          = 1;
+            TWI_Ptr                 = 0;
+            TWI_isSubAddrByte       = 0;
+
+        }
 
     // if this unit was addressed and we're receiving
     //   data, continue capturing into buffer
-    } else if ((TWSR == 0x80) && TWI_isReceiving) {
+    } else if (TWI_SLAW_DATA_RCVD && TWI_isSelected) {
+
+        // if this is first byte following a sub-address
+        // (normally the pattern byte) and it is 0xFF
+        // then treat the next stop/repeated-start as
+        // the beginning of a combined format message
+        if (TWI_Ptr == 0 && TWDR == 0xFF) 
+            TWI_isCombinedFormat = 1;
 
         // record received data 
         // until buffer is full
         if (TWI_Ptr < TWI_MAX_BUFFER_SIZE) {
             TWI_Buffer[TWI_Ptr++] = TWDR;
         } else { 
-            TWI_isReceiving = 0;
+            TWI_isSelected = 0;
         }
 
     }
