@@ -2,27 +2,26 @@ Prioritized TODOs
 
 Friday:
 
-    [ ] FadeOut pattern
-    [ ] FadeIn pattern
-    [ ] Color Cycle pattern
-
-    [ ] Repeat parameter
-    [ ] Phase parameter
-    
+    [ ] fadeOut pattern
+    [ ] fadeIn pattern
+    [ ] colorCycle pattern
+    [ ] repeat parameter
+    [x] phase parameter
     [x] color setting limits high and low
 
 Monday:
 
-    [ ] handle issue: slave holds sda line high and stops all communication
-
-    [ ] Implement parameter read functions
-
+    [ ] implement parameter read functions
+    [ ] physical lines need to set I2C address
     [ ] refactor light manager, breakout to more classes
     [ ] improve twi feature encapsulation with light manager
-
-    [ ] Physical lines need to set I2C address
-    [x] Implement command parameter parser
-    [ ] Hue parameters
-    [ ] Color tuning
+    [ ] hue parameters
+    [x] implement command parameter parser
     [x] pattern speed parameter overflows TOP limit in pattern implementation of theta
 
+Bugs:
+    [x] devices in sync, but not steady frequency
+        - fixed phase signal from arduino; set to correct period
+    [x] un-addressed devices are activating SIREN pattern
+        - fixed logic error in refactored TWI addressing code
+    [ ] slave holds sda line high and stops all communication

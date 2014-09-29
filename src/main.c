@@ -29,15 +29,22 @@
 #define TWCR_TWEN           0b00000100
 #define TWCR_TWIE           0b00000001
 
-#define TWI_SLAVE_ADDRESS   0xB0
-
 // TWI Stuff
+#define TWI_SLAVE_ADDRESS   0xB0
 #define TWI_MAX_BUFFER_SIZE 50
+#define TWI_SLAW_RCVD       (TWSR == 0x60) 
+#define TWI_SLAR_RCVD       (TWSR == 0xA8) 
+#define TWI_SLAW_DATA_RCVD  (TWSR == 0x80) 
+#define TWI_GENCALL_RCVD    (TWSR == 0x90) // TODO should be 0x70?
+#define TWI_STOP_RCVD       (TWSR == 0xA0) 
+int TWI_isCombinedFormat;
+int TWI_isSubAddrByte;
 int TWI_isSelected;
 int TWI_Ptr;
 char TWI_Buffer[TWI_MAX_BUFFER_SIZE];
 
 // use to create slave address
+#define DEVICE_ID 1
 char myTwiSubAddr;
 
 // global light pattern variable
@@ -88,7 +95,7 @@ int main(void) {
     LightManager_init(&OCR1BL, &OCR1AL, &LEDIntensityBlue);
 
     // TODO set based on physical input lines
-    LightManager_setDeviceId(2);
+    LightManager_setDeviceId(DEVICE_ID);
     myTwiSubAddr = LightManager_getDeviceIdMask();
 
     // mainloop 
@@ -109,13 +116,7 @@ int main(void) {
     
 }
 
-#define TWI_SLAW_RCVD       (TWSR == 0x60) 
-#define TWI_SLAR_RCVD       (TWSR == 0xA8) 
-#define TWI_SLAW_DATA_RCVD  (TWSR == 0x80) 
-#define TWI_GENCALL_RCVD    (TWSR == 0x90) // TODO should be 0x70?
-#define TWI_STOP_RCVD       (TWSR == 0xA0) 
-int TWI_isCombinedFormat = 0;
-int TWI_isSubAddrByte = 0;
+
 
 // TODO combine all flags to a bit mask pattern?
 ISR(TWI_vect) {
@@ -139,7 +140,7 @@ ISR(TWI_vect) {
     // record the end of a transmission if 
     //   stop bit received
     //   TODO handle condition when stopped bit missed
-    } else if (TWI_STOP_RCVD) {
+    } else if (TWI_STOP_RCVD && TWI_isSelected) {
 
         // if this is a repeated-start,
         // answer the next SLA+R
@@ -151,7 +152,8 @@ ISR(TWI_vect) {
         // mark end of transmission
         TWI_isSelected = 0;
 
-    // every message with begin here, so reset all flags
+    // every message with begin here
+    // reset all flags
     } else if (TWI_SLAW_RCVD) {
 
         TWI_isCombinedFormat    = 0;
@@ -162,11 +164,18 @@ ISR(TWI_vect) {
     //  start capturing pattern and parameters
     } else if (TWI_SLAW_DATA_RCVD && TWI_isSubAddrByte) {
 
-        if ((myTwiSubAddr & TWDR) == myTwiSubAddr) {
+        // always unflag, indicating remaining bytes
+        // are not subaddr bytes
+        TWI_isSubAddrByte = 0;
 
-            TWI_isSelected          = 1;
-            TWI_Ptr                 = 0;
-            TWI_isSubAddrByte       = 0;
+        // determine if this message is for this device
+        if (myTwiSubAddr & TWDR) {
+
+            // this device is being addressed
+            TWI_isSelected = 1;
+
+            // reset buffer pointer
+            TWI_Ptr = 0;
 
         }
 

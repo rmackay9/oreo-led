@@ -4,6 +4,9 @@
 #include <avr/io.h>
 #include <avr/cpufunc.h>
 
+static const double     _PI= 3.1415926535897932384626433;
+static const double _TWO_PI= 6.2831853071795864769252867;
+
 typedef enum _Light_Parameter {
     PARAM_RED,
     PARAM_GREEN,
@@ -117,7 +120,7 @@ void LightManager_patternOff(void);
 void LightManager_patternFadeIn(void);
 void LightManager_patternFadeOut(void);
 void LightManager_patternColorCycle(void);
-
+double LightManager_phaseAdjustedCarrierArgument(void);
 
 void LightManager_setDeviceId(int8_t);
 char LightManager_getDeviceIdMask(void);
