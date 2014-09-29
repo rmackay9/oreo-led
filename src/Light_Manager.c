@@ -111,7 +111,7 @@ void LightManager_setDeviceId(int8_t id) {
 char LightManager_getDeviceIdMask() {
 
     if (_manager_instance.deviceId)
-        return (0x00 | (1 << (_manager_instance.deviceId - 1)));
+        return (0x00 | (0x01 << (_manager_instance.deviceId - 1)));
     else 
         return 0x00;
 
@@ -382,12 +382,8 @@ void LightManager_patternSolid(void) {
 
 void LightManager_patternSine(void) {
 
- 
-    // calculate theta, in radians, from the current timer
-    double theta_rad = ((double)_manager_instance.patternCounter/PATTERN_COUNT_TOP) * _manager_instance.patternSpeed * 2*M_PI;
-
     // calculate the carrier signal 
-    double patternCarrier = sin(theta_rad + _manager_instance.deviceId * (double)_manager_instance.patternPhase/180.0 * M_PI );
+    double patternCarrier = sin(LightManager_phaseAdjustedCarrierArgument());
 
     // update LED intensities
     _manager_instance.output_target_r = (_manager_instance.redRelativeIntensity + 
@@ -401,13 +397,22 @@ void LightManager_patternSine(void) {
 
 }
 
-void LightManager_patternStrobe(void) {
+double LightManager_phaseAdjustedCarrierArgument() {
 
     // calculate theta, in radians, from the current timer
-    double theta_rad = ((double)_manager_instance.patternCounter/PATTERN_COUNT_TOP) * _manager_instance.patternSpeed * 2*M_PI;
+    double theta_rad = fmod(((double)_manager_instance.patternCounter/PATTERN_COUNT_TOP) * _manager_instance.patternSpeed * _TWO_PI, _TWO_PI);
 
     // calculate the carrier signal 
-    double patternCarrier = (sin(theta_rad) > 0) ? 1 : 0;
+    double argument = theta_rad + _manager_instance.deviceId * (double)_manager_instance.patternPhase/180.0 * _PI;
+
+    return argument;
+
+}
+
+void LightManager_patternStrobe(void) {
+
+    // calculate the carrier signal 
+    double patternCarrier = (sin(LightManager_phaseAdjustedCarrierArgument()) > 0) ? 1 : 0;
 
     // update LED intensity
     _manager_instance.output_target_r = (uint8_t)(10 + (30 * patternCarrier)); 
@@ -418,11 +423,8 @@ void LightManager_patternStrobe(void) {
 
 void LightManager_patternSiren(void) {
 
-    // calculate theta, in radians, from the current timer
-    double theta_rad = ((double)_manager_instance.patternCounter/PATTERN_COUNT_TOP) * _manager_instance.patternSpeed * 2*M_PI;
-
     // calculate the carrier signal 
-    double patternCarrier = 0.8 + 0.3 * sin(tan(theta_rad)*0.75);
+    double patternCarrier = 0.8 + 0.3 * sin(tan(LightManager_phaseAdjustedCarrierArgument())*0.75);
 
     // update LED intensity
     _manager_instance.output_target_r = (uint8_t)(10 + (double)(30 * patternCarrier)); 
@@ -433,16 +435,15 @@ void LightManager_patternSiren(void) {
 
 void LightManager_patternFadeIn(void) {
 
-    // calculate theta, in radians, from the current timer
-    double theta_rad = ((double)_manager_instance.patternCounter/PATTERN_COUNT_TOP) * _manager_instance.patternSpeed * 2*M_PI;
-
     // calculate the carrier signal 
-    double patternCarrier = sin(theta_rad/4);
+    double patternCarrier = sin(LightManager_phaseAdjustedCarrierArgument()/4);
+
+    // completes a cycle at zero crossing
 
     // update LED intensity
-    _manager_instance.output_target_r = (uint8_t)(10 + (30 * patternCarrier)); 
-    _manager_instance.output_target_g = (uint8_t)(60 + (180 * patternCarrier)); 
-    _manager_instance.output_target_b = (uint8_t)(30 + (90 * patternCarrier)); 
+    _manager_instance.output_target_r = (uint8_t)(0 + (240 * patternCarrier)); 
+    _manager_instance.output_target_g = (uint8_t)(0 + (240 * patternCarrier)); 
+    _manager_instance.output_target_b = (uint8_t)(0 + (240 * patternCarrier)); 
 
 }
 
@@ -455,7 +456,7 @@ void LightManager_patternColorCycle(void) {
 }
 
 void LightManager_setLEDChannels(void) {
-/*
+
     if (_manager_instance.output_target_r > 240) *(_manager_instance.output_r) = 240;
     else *(_manager_instance.output_r) = _manager_instance.output_target_r;
 
@@ -467,11 +468,6 @@ void LightManager_setLEDChannels(void) {
 
     if (_manager_instance.output_target_b < 15) *(_manager_instance.output_b) = 15;
     else *(_manager_instance.output_b) = _manager_instance.output_target_b;
-*/
-
-    *(_manager_instance.output_r) = _manager_instance.output_target_r;
-    *(_manager_instance.output_g) = _manager_instance.output_target_g;
-    *(_manager_instance.output_b) = _manager_instance.output_target_b;
 
 }
 
