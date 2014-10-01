@@ -20,13 +20,6 @@
 
 #include "waveform_generator.h"
 
-typedef struct _Waveform_Generator_State {
-    uint8_t* channel_1_output;
-    uint8_t* channel_2_output;
-    uint8_t channel_3_output;
-    uint8_t* channel_target[3];
-    void (*overflowCallback)();
-} WaveformGenerator _self_waveform_gen;
 
 // register the pattern generator calculated values
 //  with (up to three) hardware waveform outputs

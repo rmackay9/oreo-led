@@ -13,10 +13,13 @@
 
 **********************************************************************/
 
+#include "light_pattern_protocol.h"
+
 void LPP_setCommandRefreshed(void);
 void LPP_setRedPatternGen(&pgRed);
 void LPP_setGreenPatternGen(&pgGreen);
 void LPP_setBluePatternGen(&pgBlue);
+
 // parse commands per interface contract
 //  and update pattern generators accordingly
 void LPP_processBuffer(TWI_getBuffer(), TWI_getBufferSize());

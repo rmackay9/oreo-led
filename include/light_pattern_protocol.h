@@ -1,6 +1,6 @@
 /**********************************************************************
 
-  twi_manager.h - 
+  light_pattern_protocol.h - 
 
   Authors: 
     Nate Fisher
@@ -13,7 +13,8 @@
 
 **********************************************************************/
 
-#ifndef  WAVEFORM_GENERATOR_H
-#define  WAVEFORM_GENERATOR_H
+#ifndef  LIGHT_PATTERN_PROTOCOL_H
+#define  LIGHT_PATTERN_PROTOCOL_H
 
 #endif
+  

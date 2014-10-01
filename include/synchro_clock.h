@@ -41,7 +41,8 @@ typedef struct _Syncro_Clock_State {
     int16_t nodeTimeOffset;
     uint32_t nodeTime;
     void (*recordPhaseError)();
-} SyncroClock _self_synchro_clock;
+} SyncroClock;
+SyncroClock _self_synchro_clock;
 
 void SYNCLK_init(void);
 double SYNCLK_getClockPosition(void);

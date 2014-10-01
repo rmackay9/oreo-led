@@ -20,15 +20,20 @@
 
 #include "twi_manager.h"
 
+void TWI_onGeneralCall(void (*cb)()) {}
+void TWI_onDataReceived(void (*cb)()) {}
+char* TWI_getBuffer(void) {}
+int TWI_getBufferSize(void) {}
 
-// TWI Config
-TWAR = TWI_SLAVE_ADDRESS | TWAR_TWGCE;
-TWCR = ZERO | TWCR_TWEA | TWCR_TWEN | TWCR_TWIE;
+void TWI_init(int deviceId) {
 
-void TWI_onGeneralCall(void *) {}
-void TWI_onDataReceived(void *) {}
+    // TWI Config
+    TWAR = TWI_SLAVE_ADDRESS | TWAR_TWGCE;
+    TWCR = ZERO | TWCR_TWEA | TWCR_TWEN | TWCR_TWIE;
 
-// TODO combine all flags to a bit mask pattern?
+}
+
+// TWI ISR
 ISR(TWI_vect) {
 
     // ignore message if another light unit is being addressed
