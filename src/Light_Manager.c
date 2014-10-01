@@ -269,6 +269,11 @@ uint16_t LightManager_charToInt(char msb, char lsb) {
  *
  */
 
+
+
+
+
+
 /* 
  * update light effects time counter
  */
@@ -350,236 +355,15 @@ void LightManager_calcPhaseCorrection() {
 
 }
 
-/*
- * Light Patterns
- *
- */
-void LightManager_calc() { 
 
-    // update light intensity target values
-    // which the LEDs will be commanded to meet
-    switch(_self.currPattern) {
 
-        case PATTERN_SINE: 
-            LightManager_patternSine(); 
-            break;
-        case PATTERN_STROBE: 
-            LightManager_patternStrobe(); 
-            break;
-        case PATTERN_SIREN: 
-            LightManager_patternSiren(); 
-            break;
-        case PATTERN_SOLID: 
-            LightManager_patternSolid(); 
-            break;
-        case PATTERN_FADEOUT: 
-            LightManager_patternFadeOut(); 
-            break;
-        case PATTERN_FADEIN: 
-            LightManager_patternFadeIn(); 
-            break;
-        case PATTERN_COLORCYCLE: 
-            LightManager_patternColorCycle(); 
-            break;
-        case PATTERN_OFF:
-        default: 
-            LightManager_patternOff();
 
-    }
 
-    // calculate carrier pattern argument
-    LightManager_calcCarrierArgument();
 
-    // update physical output channels per
-    // the calculated intensity target values
-    LightManager_setLEDChannels();
 
-}
 
-void LightManager_calcCarrierArgument() {
 
-    // calculate theta, in radians, from the current timer
-    double theta_rad = ((double)_self.patternCounter/PATTERN_COUNT_TOP) * _self.patternSpeed * _TWO_PI;
 
-    // calculate the phase-adjusted theta
-    double argument = fmod(theta_rad + (double)_self.patternPhase/180.0 * _PI, _TWO_PI);
-
-    // set zero crossing flag
-     _self.isPatternZeroCrossing = (_self.patternTheta > argument) ? 1 : 0;
-
-    // set pattern theta
-    _self.patternTheta = argument;
-
-}
-
-void LightManager_patternOff(void) {
-
-    _self.output_target_r = 0; 
-    _self.output_target_g = 0; 
-    _self.output_target_b = 0; 
-
-}
-
-void LightManager_patternSolid(void) {
-    
-    // update LED intensity
-    _self.output_target_r = _self.redRelativeIntensity; 
-    _self.output_target_g = _self.greenRelativeIntensity; 
-    _self.output_target_b = _self.blueRelativeIntensity; 
-
-}
-
-void LightManager_patternStrobe(void) {
-
-    // calculate the carrier signal 
-    double patternCarrier = (sin(_self.patternTheta) > 0) ? 1 : 0;
-
-    // update LED intensity
-    _self.output_target_r = _self.redRelativeIntensity * patternCarrier; 
-    _self.output_target_g = _self.greenRelativeIntensity * patternCarrier; 
-    _self.output_target_b = _self.blueRelativeIntensity * patternCarrier; 
-
-}
-
-void LightManager_patternSine(void) {
-
-    // calculate the carrier signal 
-    double patternCarrier = sin(_self.patternTheta);
-
-    // update LED intensities
-    _self.output_target_r = (double)_self.redRelativeIntensity * _self.redBC; 
-    _self.output_target_r += (double)_self.redRelativeIntensity * patternCarrier * _self.redAC;
-
-    _self.output_target_g = (double)_self.redRelativeIntensity * _self.greenBC; 
-    _self.output_target_g += (double)_self.redRelativeIntensity * patternCarrier * _self.greenAC;
-
-    _self.output_target_b = (double)_self.redRelativeIntensity * _self.blueBC;
-    _self.output_target_b += (double)_self.redRelativeIntensity * patternCarrier * _self.blueAC;
-
-}
-
-void LightManager_patternSiren(void) {
-
-    // calculate the carrier signal 
-    double patternCarrier = sin(tan(_self.patternTheta)*.5);
-
-    // update LED intensity
-    _self.output_target_r = (double)_self.redRelativeIntensity * _self.redBC; 
-    _self.output_target_r += (double)_self.redRelativeIntensity * patternCarrier * _self.redAC;
-
-    _self.output_target_g = (double)_self.redRelativeIntensity * _self.greenBC; 
-    _self.output_target_g += (double)_self.redRelativeIntensity * patternCarrier * _self.greenAC;
-
-    _self.output_target_b = (double)_self.redRelativeIntensity * _self.blueBC;
-    _self.output_target_b += (double)_self.redRelativeIntensity * patternCarrier * _self.blueAC;
-
-}
-
-void LightManager_patternColorCycle(void) {
-
-    // calculate the carrier signal 
-    double patternCarrierRed    = sin(_self.patternTheta + _PI * 2/3);
-    double patternCarrierGreen  = sin(_self.patternTheta);
-    double patternCarrierBlue   = sin(_self.patternTheta + _PI * 4/3);
-
-    // update LED intensity
-    _self.output_target_r = (60.0 + (30.0 * patternCarrierRed)); 
-    _self.output_target_g = (40.0 + (30.0 * patternCarrierGreen)); 
-    _self.output_target_b = (40.0 + (10.0 * patternCarrierBlue)); 
-
-}
-
-void LightManager_patternFadeIn(void) {
-
-    if (_self.patternCyclesRemaining >= 0) {
-
-        // calculate the carrier signal 
-        double patternCarrier = sin(_self.patternTheta/4);
-
-        // start pattern with lights off until last pattern
-        // cycle remaining
-        if (_self.patternCyclesRemaining >= 1) {
-
-            // turn lights off
-            _self.output_target_r = 0; 
-            _self.output_target_g = 0; 
-            _self.output_target_b = 0; 
-        
-        } else {
-
-            // completes a cycle at zero crossing
-            if (!_self.isPatternZeroCrossing) {
-
-                // update LED intensity
-                _self.output_target_r = (uint8_t)(_self.redRelativeIntensity * patternCarrier); 
-                _self.output_target_g = (uint8_t)(_self.greenRelativeIntensity * patternCarrier); 
-                _self.output_target_b = (uint8_t)(_self.blueRelativeIntensity * patternCarrier); 
-
-            }
-
-        }
-
-        // decrement the cycles remaining at each zero crossing
-        if (_self.isPatternZeroCrossing) 
-            _self.patternCyclesRemaining--;
-
-    // finish pattern with LEDs on, full
-    } else {
-
-        // turn lights on, full
-        _self.output_target_r = _self.redRelativeIntensity; 
-        _self.output_target_g = _self.greenRelativeIntensity; 
-        _self.output_target_b = _self.blueRelativeIntensity; 
-
-    }
-
-}
-
-void LightManager_patternFadeOut(void) {
-
-    if (_self.patternCyclesRemaining >= 0) {
-
-        // calculate the carrier signal 
-        double patternCarrier = cos(_self.patternTheta/4);
-
-        // start pattern with lights on until last pattern
-        // cycle remaining
-        if (_self.patternCyclesRemaining >= 1) {
-
-            // turn lights on, full
-            _self.output_target_r = _self.redRelativeIntensity; 
-            _self.output_target_g = _self.greenRelativeIntensity; 
-            _self.output_target_b = _self.blueRelativeIntensity; 
-        
-        } else {
-
-            // completes a cycle at zero crossing
-            if (!_self.isPatternZeroCrossing) {
-
-                // update LED intensity
-                _self.output_target_r = (uint8_t)(_self.redRelativeIntensity * patternCarrier); 
-                _self.output_target_g = (uint8_t)(_self.greenRelativeIntensity * patternCarrier); 
-                _self.output_target_b = (uint8_t)(_self.blueRelativeIntensity * patternCarrier); 
-
-            }
-
-        }
-
-        // decrement the cycles remaining at each zero crossing
-        if (_self.isPatternZeroCrossing) 
-            _self.patternCyclesRemaining--;
-
-    // finish pattern with LEDs off
-    } else {
-
-        // turn lights off
-        _self.output_target_r = 0; 
-        _self.output_target_g = 0; 
-        _self.output_target_b = 0; 
-
-    }
-
-}
 
 void LightManager_setLEDChannels(void) {
 

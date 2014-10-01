@@ -62,8 +62,6 @@ uint8_t LEDIntensityBlue;
 
 
 int main(void) {
-
-    // TODO: record module position from hardware switches on startup, set I2C slave address accordingly
     
     // configure port B pins as output
     DDRB    = 0xFF;
