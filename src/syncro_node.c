@@ -9,21 +9,38 @@ static const double     _PI;
 static const double _TWO_PI;
 
 typedef struct _Syncro_Node_State {
-    int tickSkips                    = 0;
-    char isPhaseCorrectionUpdated    = 1;
-    char isCommandFresh              = 0;
-    int16_t nodePhaseError           = 0;
-    int16_t nodePhaseCorrection      = 0;
-    uint32_t nodeTime                = 0;
-    uint16_t systemTime              = 0;
+    int tickSkips;
+    char isPhaseCorrectionUpdated;
+    char isCommandFresh;
+    int16_t nodePhaseError;
+    int16_t nodePhaseCorrection;
+    uint32_t nodeTime;
+    uint16_t systemTime;
+    void (*recordPhaseError)();
 } SyncroNode;
 
-double SN_calcClockPosition(SyncroNode* self) {
+void SN_init(SyncroNode* self) {
+
+    // init instance members
+    self->tickSkips                 = 0;
+    self->isPhaseCorrectionUpdated  = 1;
+    self->isCommandFresh            = 0;
+    self->nodePhaseError            = 0;
+    iself->nodePhaseCorrection      = 0;
+    self->nodeTime                  = 0;
+    self->systemTime                = 0;
+
+    // setup instance methods
+    self->recordPhaseError = _SN_recordPhaseError;
+
+}
+
+double _SN_calcClockPosition(SyncroNode* self) {
     return (self->nodeTime / _SN_CLOCK_TOP) * _TWO_PI;
 }
 
 
-void SN_tick(SyncroNode* self) {
+void _SN_tick(SyncroNode* self) {
 
     // adjust clock for phase error
     if (self->tickSkips > 0) { 
@@ -40,19 +57,19 @@ void SN_tick(SyncroNode* self) {
 
 }
 
-void SN_addTickSkip(SyncroNode* self) {
+void _SN_addTickSkip(SyncroNode* self) {
 
     self->tickSkips++;
 
 }
 
-void SN_recordPhaseError(SyncroNode* self) {
+void _SN_recordPhaseError(SyncroNode* self) {
 
     self->nodeTimeOffset = self->nodeTime;
 
 }
 
-void SN_setPhaseCorrectionStale(SyncroNode* self) {
+void _SN_setPhaseCorrectionStale(SyncroNode* self) {
 
     // recompute phase correction as soon as possible
     self->isPhaseCorrectionUpdated = 0;
@@ -60,7 +77,7 @@ void SN_setPhaseCorrectionStale(SyncroNode* self) {
 
 // calculate correction for phase error
 // NOTE: limit execution to once per clock tick
-void SN_calcPhaseCorrection(SyncroNode* self) {
+void _SN_calcPhaseCorrection(SyncroNode* self) {
 
     // phase correction already updated in this cycle
     if (self->isPhaseCorrectionUpdated) return;
