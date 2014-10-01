@@ -1,40 +1,44 @@
+/**********************************************************************
+
+  main.c - 
+
+  Authors: 
+    Nate Fisher
+
+  Created at: 
+    Tue Aug 10 12:47:31 JST 1993
+
+  Copyright (C) 2015 3DRobotics, Inc.
+
+**********************************************************************/
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
 #include <avr/cpufunc.h>
-#include "Light_Manager.h"
 
-// blue LED intensity proxy to ensure
-// CCM is set at top of every clock cycle
-uint8_t LEDIntensityBlue;
+#include "pattern_generator.h"
+#include "light_pattern_protocol.h"
+#include "synchro_clock.h"
+#include "twi_manager.h"
+#include "waveform_generator.h"
+#include "node_manager.h"
+
 
 int main(void) {
     
-
-    // configure port B pins as output
-    DDRB    = 0xFF;
-    PORTB   = 0x00;
-
-    // enable interrupts (via global mask)
-    sei();
-
-
-
-    // init syncro node singleton
-    SN_init();
+    // init synchro node singleton
+    SYNCLK_init();
 
     // init TWI node singleton with device ID
-    TWI_init(Device_getId());
+    TWI_init(NODE_getId());
 
-    // register callbacks
-    TWI_onGeneralCall(SN_recordPhaseError);
-    TWI_onDataReceived(PGI_setCommandRefreshed);
-
-    // init timer management singleton
-    TM_init();
+    // register TWI event callbacks
+    TWI_onGeneralCall(SYNCLK_recordPhaseError);
+    TWI_onDataReceived(LPP_setCommandRefreshed);
 
     // create pattern generators for all
-    // three LED channels
+    //  three LED channels
     PatternGenerator pgRed;
     PatternGenerator pgGreen;
     PatternGenerator pgBlue;
@@ -44,33 +48,48 @@ int main(void) {
     PG_init(&pgGreen);
     PG_init(&pgBlue);
 
-    // init waveform generation
-    WG_init(&OCR1BL, &OCR1AL, &LEDIntensityBlue);
+    // register pattern generators with the
+    //  lighting pattern protocol interface
+    LPP_setRedPatternGen(&pgRed);
+    LPP_setGreenPatternGen(&pgGreen);
+    LPP_setBluePatternGen(&pgBlue);
 
+    // register the pattern generator calculated values
+    //  with hardware waveform outputs
+    uint8_t* wavegen_inputs[3] = {&(pgRed.output), &(pgGreen.output), &(pgBlue.output)};
+    WG_init(wavegen_inputs, 3);
 
-    // mainloop 
+    // attach clock input to the synchroniced timing
+    //  module, to ultimately drive the pattern generator
+    //  updates in a coordinated way
+    WG_onOverflow(SYNCLK_updateClock);
+
+    // enable interrupts 
+    sei();
+
+    // application mainloop 
     while(1) {
 
-        // run light effect calculations
-        PG_calc(&pgRed);
-        PG_calc(&pgGreen);
-        PG_calc(&pgBlue);
+        // run light effect calculations based
+        //  on synchronized clock reference
+        PG_calc(&pgRed, SYNCLK_getClockPosition());
+        PG_calc(&pgGreen, SYNCLK_getClockPosition());
+        PG_calc(&pgBlue, SYNCLK_getClockPosition());
 
         // update LED PWM duty cycle
-        WG_update();
+        //  with values computed in pattern generator
+        WG_updatePWM();
 
-        // adjust time to correct for phase offset
-        SN_calcPhaseCorrection();
+        // calculate time adjustment needed to 
+        //  sync up with system clock signal
+        SYNCLK_calcPhaseCorrection();
 
-        // buffer parser per interface contract
-        PGI_parseCommand(TWI_getBufffer(), TWI_getBufferSize());
+        // parse commands per interface contract
+        //  and update pattern generators accordingly
+        LPP_processBuffer(TWI_getBuffer(), TWI_getBufferSize());
 
         // TODO implement sleep for duty cycle manangement
 
     }
-    
+
 }
-
-
-
-

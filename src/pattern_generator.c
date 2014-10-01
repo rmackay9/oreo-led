@@ -1,38 +1,20 @@
+/**********************************************************************
+
+  pattern_generator.c - 
+
+  Authors: 
+    Nate Fisher
+
+  Created at: 
+    Wed Oct 1, 2014
+
+  <License> 
+  <Copyright>
+
+**********************************************************************/
+
 #include "pattern_generator.h"
 #include "math.h"
-
-static const double     _PI;
-static const double _TWO_PI;
-
-typedef enum _Pattern_Enum {
-    PATTERN_OFF, 
-    PATTERN_SINE, 
-    PATTERN_SOLID,
-    PATTERN_SIREN,
-    PATTERN_STROBE,
-    PATTERN_FADEIN, 
-    PATTERN_FADEOUT,
-    PATTERN_ENUM_COUNT
-} PatternEnum;
-
-typedef struct _Pattern_Generator_State {
-
-    // timer input: time state
-    double theta;
-    int8_t cyclesRemaining; 
-    int isNewCycle;
-
-    // user input: pattern settings
-    PatternEnum pattern;
-    double speed;
-    uint16_t phase;
-    double amplitude;
-    double bias;
-
-    // output: rendered value
-    uint8_t value;
-
-} PatternGenerator;
 
 void PG_init(PatternGenerator* self) {
     

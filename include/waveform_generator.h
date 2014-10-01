@@ -1,0 +1,44 @@
+/**********************************************************************
+
+  waveform_generator.h - 
+
+  Authors: 
+    Nate Fisher
+
+  Created at: 
+    Wed Oct 1, 2014
+
+  <License> 
+  <Copyright>
+
+**********************************************************************/
+
+#ifndef  WAVEFORM_GENERATOR_H
+#define  WAVEFORM_GENERATOR_H
+
+#define ZERO                0b00000000
+
+#define TCCR0A_CLOCK_FULL   0b00000001
+#define TCCR0A_CLOCK_DIV8   0b00000010
+
+#define TIMSK0_OCIE0B       0b00000100
+#define TIMSK0_OCIE0A       0b00000010
+#define TIMSK0_TOIE0        0b00000001
+
+#define TCCR1A_PWM_MODE     0b10100000
+#define TCCR1A_FAST_PWM8    0b00000001
+
+#define TCCR1B_FAST_PWM8    0b00001000
+#define TCCR1B_CLOCK_FULL   0b00000001
+#define TCCR1B_CLOCK_DIV8   0b00000010
+
+#define TIMSK1_TOIE1        0b00000001
+
+#define PWM_MAX_VALUE       240
+
+void WG_init(uint8_t*, int);
+void WG_onOverflow(void(*)());
+void WG_updatePWM(void);
+void _WG_configureHardware(void);
+
+#endif
