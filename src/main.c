@@ -29,6 +29,8 @@
 #define TWCR_TWEN           0b00000100
 #define TWCR_TWIE           0b00000001
 
+
+
 // TWI Stuff
 #define TWI_SLAVE_ADDRESS   0xB0
 #define TWI_MAX_BUFFER_SIZE 50
@@ -54,6 +56,9 @@ LightManagerPattern light_pattern;
 // blue LED intensity proxy to ensure
 // CCM is set at top of every clock cycle
 uint8_t LEDIntensityBlue;
+
+
+
 
 
 int main(void) {

@@ -17,6 +17,12 @@ typedef enum _Light_Parameter {
     PARAM_PERIOD,
     PARAM_REPEAT,
     PARAM_PHASEOFFSET,
+    PARAM_BC_RED,
+    PARAM_BC_GREEN,
+    PARAM_BC_BLUE,
+    PARAM_AC_RED,
+    PARAM_AC_GREEN,
+    PARAM_AC_BLUE,
     PARAM_ENUM_COUNT
 } LightParameter;
 
@@ -47,28 +53,50 @@ typedef struct _Light_Manager {
     int skipNextTick;
     int isDevicePhaseCorrectionUpdated;
 
+
+
+
+
+
     // lighting effects pattern management
     LightManagerPattern currPattern;
     uint32_t patternCounter;
     double patternSpeed;
     uint16_t patternPhase;
-    uint8_t patternCyclesRemaining; 
+    int8_t patternCyclesRemaining; 
+    double patternTheta;
+    int isPatternZeroCrossing;
+
+    // pattern coefficients
+    float redAC;
+    float blueAC;
+    float greenAC;
+    float redBC;
+    float blueBC;
+    float greenBC;
 
     // led management
     uint8_t redRelativeIntensity;
     uint8_t blueRelativeIntensity;
     uint8_t greenRelativeIntensity;
-
     uint8_t output_target_r;
     uint8_t output_target_g;
     uint8_t output_target_b;
-    volatile uint8_t* output_r;
-    volatile uint8_t* output_g;
-    volatile uint8_t* output_b;
 
     uint8_t hue;
     uint8_t saturation;
     uint8_t brightness;
+
+
+
+
+
+
+    volatile uint8_t* output_r;
+    volatile uint8_t* output_g;
+    volatile uint8_t* output_b;
+
+
     
 
 } LightManager;
@@ -120,7 +148,7 @@ void LightManager_patternOff(void);
 void LightManager_patternFadeIn(void);
 void LightManager_patternFadeOut(void);
 void LightManager_patternColorCycle(void);
-double LightManager_phaseAdjustedCarrierArgument(void);
+void LightManager_calcCarrierArgument(void);
 
 void LightManager_setDeviceId(int8_t);
 char LightManager_getDeviceIdMask(void);

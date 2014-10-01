@@ -9,18 +9,24 @@
 #include "math.h"
 
 const short int LightParameterSize[PARAM_ENUM_COUNT] = {
-    1, // Colors RGB
+    1,  // Colors RGB
     1,
     1,
-    1, // Colors HSB
+    1,  // Colors HSB
     1,
     1,
-    2, // Period
-    1, // Repeat
-    2  // Phase Offset
+    2,  // Period
+    1,  // Repeat
+    2,  // Phase Offset
+    1,  // Bias coefficients
+    1,
+    1,  
+    1,  // Amp coefficients
+    1,
+    1
 };
 
-LightManager _manager_instance;
+LightManager _self;
 
 /*
  * setup lighting manager
@@ -29,30 +35,30 @@ LightManager _manager_instance;
 void LightManager_init(volatile uint8_t* output_r, volatile uint8_t* output_g, volatile uint8_t* output_b) {
 
     // init all instance members
-    _manager_instance.skipNextTick                          = 0;
-    _manager_instance.isDevicePhaseCorrectionUpdated        = 1;
-    _manager_instance.isCommandFresh                        = 0;
-    _manager_instance.systemPhase                           = 0;
-    _manager_instance.devicePhaseError                      = 0;
-    _manager_instance.devicePhaseCorrection                 = 0;
+    _self.skipNextTick                          = 0;
+    _self.isDevicePhaseCorrectionUpdated        = 1;
+    _self.isCommandFresh                        = 0;
+    _self.systemPhase                           = 0;
+    _self.devicePhaseError                      = 0;
+    _self.devicePhaseCorrection                 = 0;
 
     // set output channel addresses
-    _manager_instance.output_r = output_r;
-    _manager_instance.output_g = output_g;
-    _manager_instance.output_b = output_b;
+    _self.output_r = output_r;
+    _self.output_g = output_g;
+    _self.output_b = output_b;
 
     // initialize output channels to WHITE
-    *(_manager_instance.output_r) = 0; 
-    *(_manager_instance.output_g) = 0; 
-    *(_manager_instance.output_b) = 10; 
+    *(_self.output_r) = 0; 
+    *(_self.output_g) = 0; 
+    *(_self.output_b) = 10; 
 
-    _manager_instance.redRelativeIntensity      = 30;
-    _manager_instance.greenRelativeIntensity    = 230;
-    _manager_instance.blueRelativeIntensity     = 80;
+    _self.redRelativeIntensity      = 30;
+    _self.greenRelativeIntensity    = 230;
+    _self.blueRelativeIntensity     = 80;
 
-    _manager_instance.patternCounter    = 0;
-    _manager_instance.patternSpeed      = 1;
-    _manager_instance.patternPhase      = 0;
+    _self.patternCounter    = 0;
+    _self.patternSpeed      = 1;
+    _self.patternPhase      = 0;
 
     // init light pattern
     LightManager_setPattern(PATTERN_OFF);
@@ -64,10 +70,13 @@ void LightManager_init(volatile uint8_t* output_r, volatile uint8_t* output_g, v
  */
 void LightManager_setPattern(LightManagerPattern pattern) {
 
-
+    // set pattern cycle count to one, for first
+    // cycle of single cycle patterns
+    if (_self.currPattern != pattern)
+        _self.patternCyclesRemaining = 1;
 
     // set current pattern
-    _manager_instance.currPattern = pattern;
+    _self.currPattern = pattern;
 
 }
 
@@ -77,7 +86,7 @@ void LightManager_setPattern(LightManagerPattern pattern) {
 void LightManager_setCounter(int16_t count) {
 
     // set counter
-    _manager_instance.patternCounter = count;
+    _self.patternCounter = count;
 
 }
 
@@ -87,7 +96,7 @@ void LightManager_setCounter(int16_t count) {
 void LightManager_setPhase(int16_t phase) {
 
     // set phase
-    _manager_instance.patternPhase = phase;
+    _self.patternPhase = phase;
 
 }
 
@@ -97,21 +106,21 @@ void LightManager_setPhase(int16_t phase) {
 void LightManager_setSpeed(double speed) {
 
     // set speed
-    _manager_instance.patternSpeed = speed;
+    _self.patternSpeed = speed;
 
 }
 
 void LightManager_setDeviceId(int8_t id) {
 
     // set counter
-    _manager_instance.deviceId = id;
+    _self.deviceId = id;
 
 }
 
 char LightManager_getDeviceIdMask() {
 
-    if (_manager_instance.deviceId)
-        return (0x00 | (0x01 << (_manager_instance.deviceId - 1)));
+    if (_self.deviceId)
+        return (0x00 | (0x01 << (_self.deviceId - 1)));
     else 
         return 0x00;
 
@@ -123,7 +132,7 @@ char LightManager_getDeviceIdMask() {
  */
 void LightManager_setCommandUpdated() {
 
-    _manager_instance.isCommandFresh = 1;
+    _self.isCommandFresh = 1;
 
 }
 
@@ -134,7 +143,7 @@ void LightManager_parseCommand(char* twiCommandBuffer, int size) {
     // ensure pointer is valid
     if (twiCommandBuffer && 
         size > 0 &&
-        _manager_instance.isCommandFresh) {
+        _self.isCommandFresh) {
 
         // set pattern if command is not a param-only command
         if (twiCommandBuffer[0] != PATTERN_PARAMUPDATE)
@@ -184,7 +193,7 @@ void LightManager_parseCommand(char* twiCommandBuffer, int size) {
     }
 
     // signal command has been parsed
-    _manager_instance.isCommandFresh = 0;
+    _self.isCommandFresh = 0;
 
 }
 
@@ -196,15 +205,15 @@ void LightManager_processParameterUpdate(LightParameter param, int start, char* 
     switch(param) {
 
         case PARAM_RED: 
-            _manager_instance.redRelativeIntensity = buffer[start];
+            _self.redRelativeIntensity = buffer[start];
             break;
 
         case PARAM_GREEN: 
-            _manager_instance.greenRelativeIntensity = buffer[start];
+            _self.greenRelativeIntensity = buffer[start];
             break;
 
         case PARAM_BLUE: 
-            _manager_instance.blueRelativeIntensity = buffer[start];
+            _self.blueRelativeIntensity = buffer[start];
             break;
 
         case PARAM_HUE: 
@@ -219,11 +228,30 @@ void LightManager_processParameterUpdate(LightParameter param, int start, char* 
             break;
 
         case PARAM_REPEAT: 
-            _manager_instance.patternCyclesRemaining = buffer[start];
+            _self.patternCyclesRemaining = buffer[start];
             break;
 
         case PARAM_PHASEOFFSET: 
             LightManager_setPhase(LightManager_charToInt(buffer[start], buffer[start+1]));
+            break;
+
+        case PARAM_BC_RED:
+            _self.redBC = buffer[start]/100.0;
+            break;
+        case PARAM_BC_GREEN:
+            _self.greenBC = buffer[start]/100.0;
+            break;
+        case PARAM_BC_BLUE:
+            _self.blueBC = buffer[start]/100.0;
+            break;
+        case PARAM_AC_RED:
+            _self.redAC = buffer[start]/100.0;
+            break;
+        case PARAM_AC_GREEN:
+            _self.greenAC = buffer[start]/100.0;
+            break;
+        case PARAM_AC_BLUE:
+            _self.blueAC = buffer[start]/100.0;
             break;
 
         default:
@@ -247,33 +275,35 @@ uint16_t LightManager_charToInt(char msb, char lsb) {
 void LightManager_tick() {
 
     // adjust clock for phase error
-    if (_manager_instance.skipNextTick > 0) { 
-        _manager_instance.skipNextTick--;
+    if (_self.skipNextTick > 0) { 
+        _self.skipNextTick--;
         return;
     }
 
     // increment lighting pattern effect clock
-    if (_manager_instance.patternCounter < PATTERN_COUNT_TOP)
-        _manager_instance.patternCounter += PATTERN_COUNT_INCREMENT;
+    if (_self.patternCounter < PATTERN_COUNT_TOP)
+        _self.patternCounter += PATTERN_COUNT_INCREMENT;
     else 
-        _manager_instance.patternCounter = PATTERN_COUNT_BOTTOM;
+        _self.patternCounter = PATTERN_COUNT_BOTTOM;
 
 }
 
 void LightManager_tickSkip() {
-    _manager_instance.skipNextTick++;
+
+    _self.skipNextTick++;
 
 }
 
 void LightManager_recordPhaseError() {
 
-    _manager_instance.systemPhase = _manager_instance.patternCounter;
+    _self.systemPhase = _self.patternCounter;
 
 }
 
 void LightManager_setPhaseCorrectionRefresh() {
+
     // recompute phase correction as soon as possible
-    _manager_instance.isDevicePhaseCorrectionUpdated = 0;
+    _self.isDevicePhaseCorrectionUpdated = 0;
 }
 
 // calculate correction for phase error
@@ -281,42 +311,42 @@ void LightManager_setPhaseCorrectionRefresh() {
 void LightManager_calcPhaseCorrection() {
 
     // phase correction already updated in this cycle
-    if (_manager_instance.isDevicePhaseCorrectionUpdated) return;
+    if (_self.isDevicePhaseCorrectionUpdated) return;
 
     // calculate phase error if a phase signal received
-    if (_manager_instance.systemPhase != 0) {
+    if (_self.systemPhase != 0) {
 
         // device is behind phase
-        if (_manager_instance.systemPhase >= PATTERN_COUNT_TOP/2) {
-            _manager_instance.devicePhaseError = (_manager_instance.systemPhase - PATTERN_COUNT_TOP) / PATTERN_COUNT_INCREMENT;
+        if (_self.systemPhase >= PATTERN_COUNT_TOP/2) {
+            _self.devicePhaseError = (_self.systemPhase - PATTERN_COUNT_TOP) / PATTERN_COUNT_INCREMENT;
 
         // device is ahead of phase
         } else {
-            _manager_instance.devicePhaseError = _manager_instance.systemPhase / PATTERN_COUNT_INCREMENT;
+            _self.devicePhaseError = _self.systemPhase / PATTERN_COUNT_INCREMENT;
         }
 
         // do not calculate phaseError again until another phase signal received
-        _manager_instance.systemPhase = 0;
+        _self.systemPhase = 0;
 
     }
 
     // only apply correction if magnitude is greater than threshold
-    if (fabs(_manager_instance.devicePhaseError) >= PHASE_CORRECTION_THRESHOLD) { 
+    if (fabs(_self.devicePhaseError) >= PHASE_CORRECTION_THRESHOLD) { 
 
         // if phase error negative, add an extra clock tick
         // if positive, remove a clock tick
-        if (_manager_instance.devicePhaseError < 0) {
+        if (_self.devicePhaseError < 0) {
             LightManager_tick();
-            _manager_instance.devicePhaseError++;
+            _self.devicePhaseError++;
         } else {
             LightManager_tickSkip();
-            _manager_instance.devicePhaseError--;
+            _self.devicePhaseError--;
         }        
         
     }
 
     // phase correction has been updated
-    _manager_instance.isDevicePhaseCorrectionUpdated = 1;
+    _self.isDevicePhaseCorrectionUpdated = 1;
 
 }
 
@@ -328,7 +358,7 @@ void LightManager_calc() {
 
     // update light intensity target values
     // which the LEDs will be commanded to meet
-    switch(_manager_instance.currPattern) {
+    switch(_self.currPattern) {
 
         case PATTERN_SINE: 
             LightManager_patternSine(); 
@@ -357,117 +387,217 @@ void LightManager_calc() {
 
     }
 
+    // calculate carrier pattern argument
+    LightManager_calcCarrierArgument();
+
     // update physical output channels per
     // the calculated intensity target values
     LightManager_setLEDChannels();
 
 }
 
+void LightManager_calcCarrierArgument() {
+
+    // calculate theta, in radians, from the current timer
+    double theta_rad = ((double)_self.patternCounter/PATTERN_COUNT_TOP) * _self.patternSpeed * _TWO_PI;
+
+    // calculate the phase-adjusted theta
+    double argument = fmod(theta_rad + (double)_self.patternPhase/180.0 * _PI, _TWO_PI);
+
+    // set zero crossing flag
+     _self.isPatternZeroCrossing = (_self.patternTheta > argument) ? 1 : 0;
+
+    // set pattern theta
+    _self.patternTheta = argument;
+
+}
+
 void LightManager_patternOff(void) {
 
-    _manager_instance.output_target_r = 0; 
-    _manager_instance.output_target_g = 0; 
-    _manager_instance.output_target_b = 10; 
+    _self.output_target_r = 0; 
+    _self.output_target_g = 0; 
+    _self.output_target_b = 0; 
 
 }
 
 void LightManager_patternSolid(void) {
     
     // update LED intensity
-    _manager_instance.output_target_r = _manager_instance.redRelativeIntensity; 
-    _manager_instance.output_target_g = _manager_instance.greenRelativeIntensity; 
-    _manager_instance.output_target_b = _manager_instance.blueRelativeIntensity; 
-
-}
-
-void LightManager_patternSine(void) {
-
-    // calculate the carrier signal 
-    double patternCarrier = sin(LightManager_phaseAdjustedCarrierArgument());
-
-    // update LED intensities
-    _manager_instance.output_target_r = (_manager_instance.redRelativeIntensity + 
-        (double)(_manager_instance.redRelativeIntensity * 0.3 * patternCarrier)); 
-
-    _manager_instance.output_target_g = (_manager_instance.greenRelativeIntensity + 
-        (double)(_manager_instance.greenRelativeIntensity * 0.3 * patternCarrier)); 
-
-    _manager_instance.output_target_b = (_manager_instance.blueRelativeIntensity + 
-        (double)(_manager_instance.blueRelativeIntensity * 0.3 * patternCarrier)); 
-
-}
-
-double LightManager_phaseAdjustedCarrierArgument() {
-
-    // calculate theta, in radians, from the current timer
-    double theta_rad = fmod(((double)_manager_instance.patternCounter/PATTERN_COUNT_TOP) * _manager_instance.patternSpeed * _TWO_PI, _TWO_PI);
-
-    // calculate the carrier signal 
-    double argument = theta_rad + _manager_instance.deviceId * (double)_manager_instance.patternPhase/180.0 * _PI;
-
-    return argument;
+    _self.output_target_r = _self.redRelativeIntensity; 
+    _self.output_target_g = _self.greenRelativeIntensity; 
+    _self.output_target_b = _self.blueRelativeIntensity; 
 
 }
 
 void LightManager_patternStrobe(void) {
 
     // calculate the carrier signal 
-    double patternCarrier = (sin(LightManager_phaseAdjustedCarrierArgument()) > 0) ? 1 : 0;
+    double patternCarrier = (sin(_self.patternTheta) > 0) ? 1 : 0;
 
     // update LED intensity
-    _manager_instance.output_target_r = (uint8_t)(10 + (30 * patternCarrier)); 
-    _manager_instance.output_target_g = (uint8_t)(60 + (180 * patternCarrier)); 
-    _manager_instance.output_target_b = (uint8_t)(30 + (90 * patternCarrier)); 
+    _self.output_target_r = _self.redRelativeIntensity * patternCarrier; 
+    _self.output_target_g = _self.greenRelativeIntensity * patternCarrier; 
+    _self.output_target_b = _self.blueRelativeIntensity * patternCarrier; 
+
+}
+
+void LightManager_patternSine(void) {
+
+    // calculate the carrier signal 
+    double patternCarrier = sin(_self.patternTheta);
+
+    // update LED intensities
+    _self.output_target_r = (double)_self.redRelativeIntensity * _self.redBC; 
+    _self.output_target_r += (double)_self.redRelativeIntensity * patternCarrier * _self.redAC;
+
+    _self.output_target_g = (double)_self.redRelativeIntensity * _self.greenBC; 
+    _self.output_target_g += (double)_self.redRelativeIntensity * patternCarrier * _self.greenAC;
+
+    _self.output_target_b = (double)_self.redRelativeIntensity * _self.blueBC;
+    _self.output_target_b += (double)_self.redRelativeIntensity * patternCarrier * _self.blueAC;
 
 }
 
 void LightManager_patternSiren(void) {
 
     // calculate the carrier signal 
-    double patternCarrier = 0.8 + 0.3 * sin(tan(LightManager_phaseAdjustedCarrierArgument())*0.75);
+    double patternCarrier = sin(tan(_self.patternTheta)*.5);
 
     // update LED intensity
-    _manager_instance.output_target_r = (uint8_t)(10 + (double)(30 * patternCarrier)); 
-    _manager_instance.output_target_g = (uint8_t)(60 + (double)(180 * patternCarrier)); 
-    _manager_instance.output_target_b = (uint8_t)(30 + (double)(90 * patternCarrier)); 
+    _self.output_target_r = (double)_self.redRelativeIntensity * _self.redBC; 
+    _self.output_target_r += (double)_self.redRelativeIntensity * patternCarrier * _self.redAC;
 
-}
+    _self.output_target_g = (double)_self.redRelativeIntensity * _self.greenBC; 
+    _self.output_target_g += (double)_self.redRelativeIntensity * patternCarrier * _self.greenAC;
 
-void LightManager_patternFadeIn(void) {
-
-    // calculate the carrier signal 
-    double patternCarrier = sin(LightManager_phaseAdjustedCarrierArgument()/4);
-
-    // completes a cycle at zero crossing
-
-    // update LED intensity
-    _manager_instance.output_target_r = (uint8_t)(0 + (240 * patternCarrier)); 
-    _manager_instance.output_target_g = (uint8_t)(0 + (240 * patternCarrier)); 
-    _manager_instance.output_target_b = (uint8_t)(0 + (240 * patternCarrier)); 
-
-}
-
-void LightManager_patternFadeOut(void) {
+    _self.output_target_b = (double)_self.redRelativeIntensity * _self.blueBC;
+    _self.output_target_b += (double)_self.redRelativeIntensity * patternCarrier * _self.blueAC;
 
 }
 
 void LightManager_patternColorCycle(void) {
 
+    // calculate the carrier signal 
+    double patternCarrierRed    = sin(_self.patternTheta + _PI * 2/3);
+    double patternCarrierGreen  = sin(_self.patternTheta);
+    double patternCarrierBlue   = sin(_self.patternTheta + _PI * 4/3);
+
+    // update LED intensity
+    _self.output_target_r = (60.0 + (30.0 * patternCarrierRed)); 
+    _self.output_target_g = (40.0 + (30.0 * patternCarrierGreen)); 
+    _self.output_target_b = (40.0 + (10.0 * patternCarrierBlue)); 
+
+}
+
+void LightManager_patternFadeIn(void) {
+
+    if (_self.patternCyclesRemaining >= 0) {
+
+        // calculate the carrier signal 
+        double patternCarrier = sin(_self.patternTheta/4);
+
+        // start pattern with lights off until last pattern
+        // cycle remaining
+        if (_self.patternCyclesRemaining >= 1) {
+
+            // turn lights off
+            _self.output_target_r = 0; 
+            _self.output_target_g = 0; 
+            _self.output_target_b = 0; 
+        
+        } else {
+
+            // completes a cycle at zero crossing
+            if (!_self.isPatternZeroCrossing) {
+
+                // update LED intensity
+                _self.output_target_r = (uint8_t)(_self.redRelativeIntensity * patternCarrier); 
+                _self.output_target_g = (uint8_t)(_self.greenRelativeIntensity * patternCarrier); 
+                _self.output_target_b = (uint8_t)(_self.blueRelativeIntensity * patternCarrier); 
+
+            }
+
+        }
+
+        // decrement the cycles remaining at each zero crossing
+        if (_self.isPatternZeroCrossing) 
+            _self.patternCyclesRemaining--;
+
+    // finish pattern with LEDs on, full
+    } else {
+
+        // turn lights on, full
+        _self.output_target_r = _self.redRelativeIntensity; 
+        _self.output_target_g = _self.greenRelativeIntensity; 
+        _self.output_target_b = _self.blueRelativeIntensity; 
+
+    }
+
+}
+
+void LightManager_patternFadeOut(void) {
+
+    if (_self.patternCyclesRemaining >= 0) {
+
+        // calculate the carrier signal 
+        double patternCarrier = cos(_self.patternTheta/4);
+
+        // start pattern with lights on until last pattern
+        // cycle remaining
+        if (_self.patternCyclesRemaining >= 1) {
+
+            // turn lights on, full
+            _self.output_target_r = _self.redRelativeIntensity; 
+            _self.output_target_g = _self.greenRelativeIntensity; 
+            _self.output_target_b = _self.blueRelativeIntensity; 
+        
+        } else {
+
+            // completes a cycle at zero crossing
+            if (!_self.isPatternZeroCrossing) {
+
+                // update LED intensity
+                _self.output_target_r = (uint8_t)(_self.redRelativeIntensity * patternCarrier); 
+                _self.output_target_g = (uint8_t)(_self.greenRelativeIntensity * patternCarrier); 
+                _self.output_target_b = (uint8_t)(_self.blueRelativeIntensity * patternCarrier); 
+
+            }
+
+        }
+
+        // decrement the cycles remaining at each zero crossing
+        if (_self.isPatternZeroCrossing) 
+            _self.patternCyclesRemaining--;
+
+    // finish pattern with LEDs off
+    } else {
+
+        // turn lights off
+        _self.output_target_r = 0; 
+        _self.output_target_g = 0; 
+        _self.output_target_b = 0; 
+
+    }
+
 }
 
 void LightManager_setLEDChannels(void) {
 
-    if (_manager_instance.output_target_r > 240) *(_manager_instance.output_r) = 240;
-    else *(_manager_instance.output_r) = _manager_instance.output_target_r;
+    // rescale LED percentage values to 0->240
+    int greenValue = (fmod(_self.output_target_g, 100.0)/100.0) * 240;
+    int redValue = (fmod(_self.output_target_r, 100.0)/100.0) * 240;
 
-    if (_manager_instance.output_target_g > 240) *(_manager_instance.output_g) = 240;
-    else *(_manager_instance.output_g) = _manager_instance.output_target_g;
+    // set pins to input mode, if value is actually zero
+    // TODO abstract physical pins from class function
+    if (redValue == 0) DDRB &= 0b11111011; //PB2 reset to input
+    else DDRB |= 0b00000100; //PB2 set to output
+    if (greenValue == 0) DDRB &= 0b11111101; //PB1 reset to input
+    else DDRB |= 0b00000010; //PB1 set to output
 
-    if (_manager_instance.output_target_b > 240) *(_manager_instance.output_b) = 240;
-    else *(_manager_instance.output_b) = _manager_instance.output_target_b;
-
-    if (_manager_instance.output_target_b < 15) *(_manager_instance.output_b) = 15;
-    else *(_manager_instance.output_b) = _manager_instance.output_target_b;
+    // assign color values to PWM timers
+    *(_self.output_r) = redValue;
+    *(_self.output_g) = greenValue;
+    *(_self.output_b) = (fmod(_self.output_target_b, 100.0)/100.0) * 226 + 14;
 
 }
 
