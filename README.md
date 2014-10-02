@@ -6,9 +6,14 @@ Prioritized TODOs
     [x] phase parameter
     [x] color setting limits high and low
 
-    [x] create fake pixhawk, controlled via serial application
+
+    [ ] create fake pixhawk, controlled via serial application
     [x] create parameters for pattern coefficients
-    [ ] repeat parameter
+    [x] repeat parameter
+    [x] apply repeate for all patterns
+    [x] refactor light manager, breakout to more classes
+    [x] improve twi feature encapsulation with light manager
+
 
     [x] implement command parameter parser
     [x] pattern speed parameter overflows TOP limit in pattern implementation of theta

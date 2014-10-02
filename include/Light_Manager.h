@@ -3,9 +3,7 @@
 
 #include <avr/io.h>
 #include <avr/cpufunc.h>
-
-static const double     _PI= 3.1415926535897932384626433;
-static const double _TWO_PI= 6.2831853071795864769252867;
+#include "utilities.h"
 
 typedef enum _Light_Parameter {
     PARAM_RED,
