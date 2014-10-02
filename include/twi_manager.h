@@ -17,8 +17,7 @@
 #define  TWI_MANAGER_H
 
 // TODO replace with hardware address detection pins
-#define TWI_SLAVE_ADDRESS   0xB0
-#define myTwiSubAddr        0b00001000
+#define TWI_SLAVE_ADDRESS   0xD0
 
 #define ZERO                0b00000000
 
