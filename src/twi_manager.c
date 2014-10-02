@@ -20,10 +20,21 @@
 
 #include "twi_manager.h"
 
-void TWI_onGeneralCall(void (*cb)()) {}
-void TWI_onDataReceived(void (*cb)()) {}
-char* TWI_getBuffer(void) {}
-int TWI_getBufferSize(void) {}
+void TWI_onGeneralCall(void (*cb)()) {
+    generalCallCB = cb;
+}
+
+void TWI_onDataReceived(void (*cb)()) {
+    dataReceivedCB = cb;
+}
+
+char* TWI_getBuffer(void) {
+    return TWI_Buffer;
+}
+
+int TWI_getBufferSize(void) {
+    return TWI_Ptr;
+}
 
 void TWI_init(int deviceId) {
 
@@ -48,9 +59,8 @@ ISR(TWI_vect) {
     //  calculate current time offset and store it
     } else if (TWI_GENCALL_RCVD) {
 
-        // record the phase error for correction
-        // in mainloop
-        LightManager_recordPhaseError();
+        // execute callback when general call received
+        generalCallCB();
 
     // record the end of a transmission if 
     //   stop bit received
@@ -60,8 +70,9 @@ ISR(TWI_vect) {
         // if this is a repeated-start,
         // answer the next SLA+R
         if (!TWI_isCombinedFormat) {
-            // set flag to re-parse TWI command
-            LightManager_setCommandUpdated();
+            
+            // execute callback when data received
+            dataReceivedCB();
         } 
 
         // mark end of transmission

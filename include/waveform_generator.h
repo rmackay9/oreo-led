@@ -45,7 +45,7 @@ typedef struct _Waveform_Generator_State {
 } WaveformGenerator;
 WaveformGenerator _self_waveform_gen;
 
-void WG_init(uint8_t*, int);
+void WG_init(uint8_t**, int);
 void WG_onOverflow(void(*)());
 void WG_updatePWM(void);
 void _WG_configureHardware(void);

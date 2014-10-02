@@ -13,6 +13,7 @@
 
 **********************************************************************/
 
+#include <avr/io.h>
 #include "node_manager.h"
 
 uint8_t NODE_getId() {

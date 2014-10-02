@@ -4,7 +4,7 @@ OBJECT_DIR=build
 SRC_DIR=src
 INCLUDE_DIR=include
 OUTPUT_NAME=main
-OBJECTS=${OBJECT_DIR}/main.o ${OBJECT_DIR}/light_pattern_protocol.o ${OBJECT_DIR}/node_manager.o 
+OBJECTS=${OBJECT_DIR}/light_pattern_protocol.o ${OBJECT_DIR}/node_manager.o 
 OBJECTS+= ${OBJECT_DIR}/pattern_generator.o ${OBJECT_DIR}/synchro_clock.o ${OBJECT_DIR}/twi_manager.o 
 OBJECTS+= ${OBJECT_DIR}/utilities.o ${OBJECT_DIR}/waveform_generator.o
 
@@ -68,8 +68,8 @@ ${OBJECT_DIR}/main.o: ${SRC_DIR}/main.c ${OBJECTS}
 # Link
 ##############################################
 
-${OBJECT_DIR}/${OUTPUT_NAME}.elf: ${OBJECTS}
-	@${AVRGCC} ${OBJECTS} ${CFLAGS} -o ${OBJECT_DIR}/${OUTPUT_NAME}.elf 
+${OBJECT_DIR}/${OUTPUT_NAME}.elf: ${OBJECT_DIR}/main.o ${OBJECTS} 
+	@${AVRGCC} ${OBJECT_DIR}/main.o ${OBJECTS} ${CFLAGS} -o ${OBJECT_DIR}/${OUTPUT_NAME}.elf 
 
 ${OBJECT_DIR}/${OUTPUT_NAME}.hex: ${OBJECT_DIR}/${OUTPUT_NAME}.elf
 	@${RM} -f ${OBJECT_DIR}/${OUTPUT_NAME}.hex

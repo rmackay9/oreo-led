@@ -13,7 +13,9 @@
 
 **********************************************************************/
 
+#include <avr/io.h>
 #include "pattern_generator.h"
+#include "utilities.h"
 #include "math.h"
 
 void PG_init(PatternGenerator* self) {
@@ -22,7 +24,7 @@ void PG_init(PatternGenerator* self) {
     self->theta               = 0;
     self->isNewCycle          = 0;
     self->pattern             = PATTERN_OFF;
-    self->speed               = 0;
+    self->speed               = 1;
     self->phase               = 0;
     self->amplitude           = 0;
     self->bias                = 0;
@@ -72,7 +74,7 @@ void _PG_calcTheta(PatternGenerator* self, double clock_position) {
     double theta_at_speed = clock_position * self->speed;
 
     // calculate the speed and phase adjusted theta
-    double new_theta = fmod(theta_at_speed + Util_degToRad(self->phase), _TWO_PI);
+    double new_theta = fmod(theta_at_speed + UTIL_degToRad(self->phase), _TWO_PI);
 
     // set zero crossing flag
     self->isNewCycle = (self->theta > new_theta) ? 1 : 0;
@@ -137,7 +139,7 @@ void _PG_patternFadeIn(PatternGenerator* self) {
         // start pattern with output low
         if (self->cyclesRemaining >= 1) {
 
-            self->output = 0; 
+            self->value = 0; 
         
         } else {
 
@@ -145,7 +147,7 @@ void _PG_patternFadeIn(PatternGenerator* self) {
             if (!self->isNewCycle) {
 
                 // update output
-                self->output = self->amplitude * carrier;
+                self->value = self->amplitude * carrier;
 
             }
 
@@ -157,7 +159,7 @@ void _PG_patternFadeIn(PatternGenerator* self) {
     // finish pattern with value high
     } else {
 
-        self->output = self->amplitude;
+        self->value = self->amplitude;
 
     }
 
@@ -173,7 +175,7 @@ void _PG_patternFadeOut(PatternGenerator* self) {
         // start pattern with output high 
         if (self->cyclesRemaining >= 1) {
 
-            self->output = self->amplitude; 
+            self->value = self->amplitude; 
         
         } else {
 
@@ -181,7 +183,7 @@ void _PG_patternFadeOut(PatternGenerator* self) {
             if (!self->isNewCycle) {
 
                 // update output
-                self->output = self->amplitude * carrier;
+                self->value = self->amplitude * carrier;
 
             }
 
@@ -193,7 +195,7 @@ void _PG_patternFadeOut(PatternGenerator* self) {
     // finish pattern with value zero
     } else {
 
-        self->output = 0;
+        self->value = 0;
 
     }
 

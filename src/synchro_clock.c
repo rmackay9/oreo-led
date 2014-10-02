@@ -67,7 +67,7 @@ void _SYNCLK_clockSkip(void) {
 
 }
 
-void _SYNCLK_recordPhaseError(void) {
+void SYNCLK_recordPhaseError(void) {
 
     _self_synchro_clock.nodeTimeOffset = _self_synchro_clock.nodeTime;
 
@@ -82,7 +82,7 @@ void _SYNCLK_setPhaseCorrectionStale(void) {
 
 // calculate correction for phase error
 // NOTE: user must limit execution to once per clock tick
-void _SYNCLK_calcPhaseCorrection(void) {
+void SYNCLK_calcPhaseCorrection(void) {
 
     // phase correction already updated in this cycle
     if (_self_synchro_clock.isPhaseCorrectionUpdated) return;

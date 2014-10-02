@@ -13,66 +13,41 @@
 
 **********************************************************************/
 
+#include <avr/io.h>
 #include "light_pattern_protocol.h"
+#include "pattern_generator.h"
+#include "utilities.h"
 
-void LPP_setCommandRefreshed(void);
-void LPP_setRedPatternGen(&pgRed);
-void LPP_setGreenPatternGen(&pgGreen);
-void LPP_setBluePatternGen(&pgBlue);
+void LPP_setRedPatternGen(PatternGenerator* pattern) { 
 
-// parse commands per interface contract
-//  and update pattern generators accordingly
-void LPP_processBuffer(TWI_getBuffer(), TWI_getBufferSize());
+    _self_pattern_protocol.redPattern = pattern; 
+
+}
+
+void LPP_setGreenPatternGen(PatternGenerator* pattern) { 
+
+    _self_pattern_protocol.greenPattern = pattern; 
+
+}
+
+void LPP_setBluePatternGen(PatternGenerator* pattern) { 
+
+    _self_pattern_protocol.bluePattern = pattern; 
+
+}
         
-typedef enum _Light_Protocol_Parameter {
-    PARAM_RED,
-    PARAM_GREEN,
-    PARAM_BLUE,
-    PARAM_HUE,
-    PARAM_SATURATION,
-    PARAM_BRIGHTNESS,
-    PARAM_PERIOD,
-    PARAM_REPEAT,
-    PARAM_PHASEOFFSET,
-    PARAM_BC_RED,
-    PARAM_BC_GREEN,
-    PARAM_BC_BLUE,
-    PARAM_AC_RED,
-    PARAM_AC_GREEN,
-    PARAM_AC_BLUE,
-    PARAM_ENUM_COUNT
-} LightProtocolParameter;
-
-const short int LightParameterSize[PARAM_ENUM_COUNT] = {
-    1,  // Colors RGB
-    1,
-    1,
-    1,  // Colors HSB
-    1,
-    1,
-    2,  // Period
-    1,  // Repeat
-    2,  // Phase Offset
-    1,  // Bias coefficients
-    1,
-    1,  
-    1,  // Amp coefficients
-    1,
-    1
-};
-
-void LPP_parseCommand(char* twiCommandBuffer, int size) {
+void LPP_processBuffer(char* twiCommandBuffer, int size) {
 
     // if command is new, re-parse
     // ensure valid length buffer
     // ensure pointer is valid
     if (twiCommandBuffer && 
         size > 0 &&
-        _self.isCommandFresh) {
+        _self_pattern_protocol.isCommandFresh) {
 
         // set pattern if command is not a param-only command
         if (twiCommandBuffer[0] != PATTERN_PARAMUPDATE)
-            LPP_setPattern( twiCommandBuffer[0] );
+            _LPP_setPattern( twiCommandBuffer[0] );
 
         // cycle through remaining params
         // beginning with first param (following pattern byte)
@@ -80,7 +55,7 @@ void LPP_parseCommand(char* twiCommandBuffer, int size) {
         while (buffer_pointer < size) {
 
             // digest parameters serially
-            LightParameter currParam;
+            PatternEnum currParam;
 
             // ensure parameter is valid, stop parsing if invalid
             //    this means that part of a message can be parsed, until
@@ -107,7 +82,7 @@ void LPP_parseCommand(char* twiCommandBuffer, int size) {
 
             // implement parameter+value update 
             //process(currParam, start, stop, buffer);
-            LPP_processParameterUpdate(currParam, buffer_pointer+1, twiCommandBuffer);
+            _LPP_processParameterUpdate(currParam, buffer_pointer+1, twiCommandBuffer);
 
             // advance pointer
             buffer_pointer += paramSize + 1;
@@ -118,108 +93,73 @@ void LPP_parseCommand(char* twiCommandBuffer, int size) {
     }
 
     // signal command has been parsed
-    _self.isCommandFresh = 0;
+    _self_pattern_protocol.isCommandFresh = 0;
 
 }
 
-void LPP_processParameterUpdate(LightParameter param, int start, char* buffer) {
+void LPP_setCommandRefreshed() {
+
+    _self_pattern_protocol.isCommandFresh = 1;
+
+}
+
+void _LPP_setPattern(int patternEnum) {
+    _self_pattern_protocol.redPattern->pattern = patternEnum;
+    _self_pattern_protocol.greenPattern->pattern = patternEnum;
+    _self_pattern_protocol.bluePattern->pattern = patternEnum;
+}
+
+void _LPP_processParameterUpdate(PatternEnum param, int start, char* buffer) {
 
     // validate arguments
     if (!buffer) return;
 
     switch(param) {
 
-        case PARAM_RED: 
-            _self.redRelativeIntensity = buffer[start];
+        case PARAM_BIAS_RED: 
+            _self_pattern_protocol.redPattern->bias = buffer[start];
             break;
 
-        case PARAM_GREEN: 
-            _self.greenRelativeIntensity = buffer[start];
+        case PARAM_BIAS_GREEN: 
+            _self_pattern_protocol.greenPattern->bias = buffer[start];
             break;
 
-        case PARAM_BLUE: 
-            _self.blueRelativeIntensity = buffer[start];
+        case PARAM_BIAS_BLUE: 
+            _self_pattern_protocol.bluePattern->bias = buffer[start];
             break;
 
-        case PARAM_HUE: 
+        case PARAM_AMPLITUDE_RED: 
+            _self_pattern_protocol.redPattern->amplitude = buffer[start];
             break;
-        case PARAM_SATURATION: 
+
+        case PARAM_AMPLITUDE_GREEN: 
+            _self_pattern_protocol.greenPattern->amplitude = buffer[start];
             break;
-        case PARAM_BRIGHTNESS: 
+
+        case PARAM_AMPLITUDE_BLUE: 
+            _self_pattern_protocol.bluePattern->amplitude = buffer[start];
             break;
 
         case PARAM_PERIOD: 
-            LPP_setSpeed(4000.0 / LPP_charToInt(buffer[start], buffer[start+1])); 
+            _self_pattern_protocol.redPattern->speed    = 4000.0 / UTIL_charToInt(buffer[start], buffer[start+1]);
+            _self_pattern_protocol.greenPattern->speed  = 4000.0 / UTIL_charToInt(buffer[start], buffer[start+1]);
+            _self_pattern_protocol.bluePattern->speed   = 4000.0 / UTIL_charToInt(buffer[start], buffer[start+1]);
             break;
 
         case PARAM_REPEAT: 
-            _self.patternCyclesRemaining = buffer[start];
+            _self_pattern_protocol.redPattern->cyclesRemaining    = buffer[start];
+            _self_pattern_protocol.greenPattern->cyclesRemaining  = buffer[start];
+            _self_pattern_protocol.bluePattern->cyclesRemaining   = buffer[start];
             break;
 
         case PARAM_PHASEOFFSET: 
-            LPP_setPhase(LPP_charToInt(buffer[start], buffer[start+1]));
-            break;
-
-        case PARAM_BC_RED:
-            _self.redBC = buffer[start]/100.0;
-            break;
-        case PARAM_BC_GREEN:
-            _self.greenBC = buffer[start]/100.0;
-            break;
-        case PARAM_BC_BLUE:
-            _self.blueBC = buffer[start]/100.0;
-            break;
-        case PARAM_AC_RED:
-            _self.redAC = buffer[start]/100.0;
-            break;
-        case PARAM_AC_GREEN:
-            _self.greenAC = buffer[start]/100.0;
-            break;
-        case PARAM_AC_BLUE:
-            _self.blueAC = buffer[start]/100.0;
+            _self_pattern_protocol.redPattern->phase    = UTIL_charToInt(buffer[start], buffer[start+1]);
+            _self_pattern_protocol.greenPattern->phase  = UTIL_charToInt(buffer[start], buffer[start+1]);
+            _self_pattern_protocol.bluePattern->phase   = UTIL_charToInt(buffer[start], buffer[start+1]);
             break;
 
         default:
             break;
     }
-
-}
-
-void LPP_setCounter(int16_t count) {
-
-    // set counter
-    _self.patternCounter = count;
-
-}
-
-void LPP_setPhase(int16_t phase) {
-
-    // set phase
-    _self.patternPhase = phase;
-
-}
-
-void LPP_setSpeed(double speed) {
-
-    // set speed
-    _self.patternSpeed = speed;
-
-}
-
-void LPP_setCommandUpdated() {
-
-    _self.isCommandFresh = 1;
-
-}
-
-void LPP_setPattern(LightManagerPattern pattern) {
-
-    // set pattern cycle count to one, for first
-    // cycle of single cycle patterns
-    if (_self.currPattern != pattern)
-        _self.patternCyclesRemaining = 1;
-
-    // set current pattern
-    _self.currPattern = pattern;
 
 }

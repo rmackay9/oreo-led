@@ -18,6 +18,9 @@
 
 // TODO replace with hardware address detection pins
 #define TWI_SLAVE_ADDRESS   0xB0
+#define myTwiSubAddr        0b00001000
+
+#define ZERO                0b00000000
 
 // TWI hardware flags
 #define TWAR_TWGCE          0b00000001
@@ -40,8 +43,12 @@ uint8_t TWI_isSelected;
 
 // TWI buffer
 int TWI_Ptr;
-static const int TWI_MAX_BUFFER_SIZE = 50;
+#define TWI_MAX_BUFFER_SIZE 50
 char TWI_Buffer[TWI_MAX_BUFFER_SIZE];
+
+// callbacks
+void (*generalCallCB)();
+void (*dataReceivedCB)();
 
 void TWI_onGeneralCall(void (*)());
 void TWI_onDataReceived(void (*)());

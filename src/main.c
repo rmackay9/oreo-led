@@ -17,6 +17,8 @@
 #include <avr/sleep.h>
 #include <avr/cpufunc.h>
 
+#include "math.h"
+
 #include "pattern_generator.h"
 #include "light_pattern_protocol.h"
 #include "synchro_clock.h"
@@ -56,7 +58,7 @@ int main(void) {
 
     // register the pattern generator calculated values
     //  with hardware waveform outputs
-    uint8_t* wavegen_inputs[3] = {&(pgRed.output), &(pgGreen.output), &(pgBlue.output)};
+    uint8_t* wavegen_inputs[3] = {&(pgRed.value), &(pgGreen.value), &(pgBlue.value)};
     WG_init(wavegen_inputs, 3);
 
     // attach clock input to the synchroniced timing

@@ -16,8 +16,7 @@
 #ifndef  PATTERN_GENERATOR_H
 #define  PATTERN_GENERATOR_H
 
-static const double     _PI;
-static const double _TWO_PI;
+#include "utilities.h"
 
 typedef enum _Pattern_Enum {
     PATTERN_OFF, 
@@ -27,6 +26,7 @@ typedef enum _Pattern_Enum {
     PATTERN_STROBE,
     PATTERN_FADEIN, 
     PATTERN_FADEOUT,
+    PATTERN_PARAMUPDATE,
     PATTERN_ENUM_COUNT
 } PatternEnum;
 

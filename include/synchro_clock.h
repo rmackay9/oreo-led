@@ -16,6 +16,8 @@
 #ifndef  SYNCHRO_CLOCK_H
 #define  SYNCHRO_CLOCK_H
 
+#include "utilities.h"
+
 // TODO: make an init function to handle these calculations
 // creates a period of exactly 4s with:
 //  - ticks at 8Mhz/8/8/256 (= 488.28125 Hz)
@@ -27,10 +29,6 @@ static const double _SYNCLK_TICK_INCREMENT          = 32;
 
 // TODO: make setter routine to adjust agressiveness
 static const double _SYNCLK_CORRECTION_THRESHOLD    = 2;
-
-// TODO: extern these
-static const double     _PI= 3.1415926535897932384626433;
-static const double _TWO_PI= 6.2831853071795864769252867;
 
 // Clock singleton instance
 typedef struct _Syncro_Clock_State {
@@ -47,10 +45,11 @@ SyncroClock _self_synchro_clock;
 void SYNCLK_init(void);
 double SYNCLK_getClockPosition(void);
 void SYNCLK_updateClock(void);
+void SYNCLK_recordPhaseError(void);
+void SYNCLK_calcPhaseCorrection(void);
 void _SYNCLK_clockTick(void);
 void _SYNCLK_clockSkip(void);
-void _SYNCLK_recordPhaseError(void);
 void _SYNCLK_setPhaseCorrectionStale(void);
-void _SYNCLK_calcPhaseCorrection(void);
+
 
 #endif
