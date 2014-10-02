@@ -70,8 +70,6 @@ ISR(TWI_vect) {
 
         // execute callback when data received
         dataReceivedCB();
-
-        TWI_Ptr = 0;
         
     // every message with begin here
     // reset pointer

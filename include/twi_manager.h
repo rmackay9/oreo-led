@@ -23,7 +23,7 @@
 #include "utilities.h"
 
 // TODO replace with hardware address detection pins
-#define TWI_SLAVE_ADDRESS   0xD0
+#define TWI_SLAVE_ADDRESS   0xA0
 
 // TWI buffer
 int TWI_Ptr;

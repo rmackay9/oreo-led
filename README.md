@@ -1,6 +1,5 @@
 # System Architecture 
 
-
         +------------------+        +----------------+
         |                  |  tick  |                |
         |                  < - - - -+  Waveform Gen  |---> To LEDs
