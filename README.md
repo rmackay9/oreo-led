@@ -1,15 +1,16 @@
 # System Architecture 
 
+
         +------------------+        +----------------+
-        |                  |        |                |
-        |                  <--------+  Waveform Gen  |
+        |                  |  tick  |                |
+        |                  < - - - -+  Waveform Gen  |---> To LEDs
         |                  |        |                |
         |                  |        +--------^-------+
         |                  |                 |        
         |   Synchronized   |                 |        
         |   Clock          |                 |        
         |                  |        +--------+-------+
-        |                  |        |                |
+        |                  |  theta |                |
         |                  +-------->  Pattern       |
         |                  |        |  Generator     |
         |                  |        |                |
