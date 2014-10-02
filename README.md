@@ -6,14 +6,12 @@ Prioritized TODOs
     [x] phase parameter
     [x] color setting limits high and low
 
-
     [ ] create fake pixhawk, controlled via serial application
     [x] create parameters for pattern coefficients
     [x] repeat parameter
-    [x] apply repeate for all patterns
+    [ ] apply repeate for all patterns
     [x] refactor light manager, breakout to more classes
     [x] improve twi feature encapsulation with light manager
-
 
     [x] implement command parameter parser
     [x] pattern speed parameter overflows TOP limit in pattern implementation of theta
@@ -28,13 +26,13 @@ Bugs:
     [ ] slaves freeze after a sequenctial phase offset command to each unit
     [x] turn off lights completely at zero intensity
     [ ] increase pwm freq to improve low end dithering
+    [ ] verify synchronization is working with a solid phase signal
 
 Deferred:
 
+    [ ] make proportional adjustments to phase error
     [ ] hue parameters
     [ ] implement parameter read functions
     [ ] physical lines need to set I2C address
-    [ ] use physical i2c addresses, remove subaddr
-    [ ] refactor light manager, breakout to more classes
-    [ ] improve twi feature encapsulation with light manager
+    [x] use physical i2c addresses, remove subaddr
 

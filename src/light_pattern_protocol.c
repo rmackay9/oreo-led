@@ -1,6 +1,6 @@
 /**********************************************************************
 
-  light_pattern_protocol.c - 
+  light_pattern_protocol.c - implementation, see header for description
 
   Authors: 
     Nate Fisher
@@ -153,9 +153,9 @@ void _LPP_processParameterUpdate(PatternEnum param, int start, char* buffer) {
             break;
 
         case PARAM_PHASEOFFSET: 
-            _self_pattern_protocol.redPattern->phase    = UTIL_charToInt(buffer[start], buffer[start+1]);
-            _self_pattern_protocol.greenPattern->phase  = UTIL_charToInt(buffer[start], buffer[start+1]);
-            _self_pattern_protocol.bluePattern->phase   = UTIL_charToInt(buffer[start], buffer[start+1]);
+            _self_pattern_protocol.redPattern->phase    = UTIL_degToRad(UTIL_charToInt(buffer[start], buffer[start+1]));
+            _self_pattern_protocol.greenPattern->phase  = UTIL_degToRad(UTIL_charToInt(buffer[start], buffer[start+1]));
+            _self_pattern_protocol.bluePattern->phase   = UTIL_degToRad(UTIL_charToInt(buffer[start], buffer[start+1]));
             break;
 
         default:

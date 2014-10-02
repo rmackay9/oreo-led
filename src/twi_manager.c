@@ -1,6 +1,6 @@
 /**********************************************************************
 
-  twi_manager.c - 
+  twi_manager.c - implementation, see header for description
 
   Authors: 
     Nate Fisher
@@ -20,27 +20,38 @@
 
 #include "twi_manager.h"
 
-void TWI_onGeneralCall(void (*cb)()) {
-    generalCallCB = cb;
-}
-
-void TWI_onDataReceived(void (*cb)()) {
-    dataReceivedCB = cb;
-}
-
-char* TWI_getBuffer(void) {
-    return TWI_Buffer;
-}
-
-int TWI_getBufferSize(void) {
-    return TWI_Ptr;
-}
-
 void TWI_init(int deviceId) {
 
     // TWI Config
     TWAR = TWI_SLAVE_ADDRESS | TWAR_TWGCE;
     TWCR = ZERO | TWCR_TWEA | TWCR_TWEN | TWCR_TWIE;
+
+}
+
+// specify callback to be executed
+//  when device receives a general call
+void TWI_onGeneralCall(void (*cb)()) {
+    generalCallCB = cb;
+
+}
+
+// specify callback to be executed
+//  when device receives a completed 
+//  data packet (at STOP signal)
+void TWI_onDataReceived(void (*cb)()) {
+    dataReceivedCB = cb;
+
+}
+
+// returns pointer to TWI data buffer
+char* TWI_getBuffer(void) {
+    return TWI_Buffer;
+
+}
+
+// returns buffer pointer
+int TWI_getBufferSize(void) {
+    return TWI_Ptr;
 
 }
 
@@ -60,6 +71,8 @@ ISR(TWI_vect) {
         // execute callback when data received
         dataReceivedCB();
 
+        TWI_Ptr = 0;
+        
     // every message with begin here
     // reset pointer
     } else if (TWI_SLAW_RCVD) {

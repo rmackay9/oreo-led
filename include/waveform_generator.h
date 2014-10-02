@@ -1,6 +1,10 @@
 /**********************************************************************
 
-  waveform_generator.h - 
+  waveform_generator.h - interacts with hardware timers and pwm
+    generators to output a waveform as specified by the input 
+    channel registers. 
+
+
 
   Authors: 
     Nate Fisher

@@ -1,6 +1,9 @@
 /**********************************************************************
 
-  light_pattern_protocol.h - 
+  light_pattern_protocol.h - implementation of communications interface
+    agreed upon by lighting system users. This is the file which will be 
+    updated when interface changes are required, and is not meant to be
+    portable, but rather a very application-specific implementation.
 
   Authors: 
     Nate Fisher
@@ -17,7 +20,8 @@
 #define  LIGHT_PATTERN_PROTOCOL_H
 
 #include "pattern_generator.h"
-
+#include "utilities.h"
+  
 typedef enum _Light_Protocol_Parameter {
     PARAM_BIAS_RED,
     PARAM_BIAS_GREEN,

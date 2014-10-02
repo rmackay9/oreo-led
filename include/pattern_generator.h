@@ -1,6 +1,17 @@
 /**********************************************************************
 
-  pattern_generator.h - 
+  pattern_generator.h - a set of utilities to generate parametrically
+    driven patterns. The time domain for the pattern must be updated
+    via the theta parameter. In addition, phase and speed can be 
+    specified, which will be used to adjust the specified theta value.
+    Computation of patterns generally follows the convention: 
+
+        value = bias + amplitude * f(x)
+
+    ...where x is some speed and phase adjusted time domain 
+    ...where f() is a carrier function determined by the pattern 
+
+
 
   Authors: 
     Nate Fisher

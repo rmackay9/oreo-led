@@ -1,6 +1,20 @@
 /**********************************************************************
 
-  synchro_clock.h - 
+  synchro_clock.h - a clock, at a speed defined in this header file,
+    synchronizable to a phase correction signal. This means that if an
+    external signal is supplied at some interval, this clock will
+    temporarily adjust its speed to synchronize with the phase signal.
+
+    
+    To synch to a phase signal, first call recordPhaseError() when a phase
+      signal is detected. then, perhaps at a later time, call 
+      calcPhaseCorrection() to compute the adjustment required.
+
+    To advance the clock, call updateClock(). Any phase adjustments which
+      were previously computed will be automatically applied.
+
+
+
 
   Authors: 
     Nate Fisher
@@ -27,10 +41,10 @@ static const double _SYNCLK_CLOCK_RESET             = 0;
 static const double _SYNCLK_CLOCK_TOP               = 62500;
 static const double _SYNCLK_TICK_INCREMENT          = 32;
 
-// TODO: make setter routine to adjust agressiveness
+// TODO: make a setter routine to adjust agressiveness
 static const double _SYNCLK_CORRECTION_THRESHOLD    = 2;
 
-// Clock singleton instance
+// synchro clock state structure
 typedef struct _Syncro_Clock_State {
     int clockSkips;
     char isPhaseCorrectionUpdated;
@@ -40,6 +54,8 @@ typedef struct _Syncro_Clock_State {
     uint32_t nodeTime;
     void (*recordPhaseError)();
 } SyncroClock;
+
+// synchro clock singleton instance
 SyncroClock _self_synchro_clock;
 
 void SYNCLK_init(void);
@@ -50,6 +66,5 @@ void SYNCLK_calcPhaseCorrection(void);
 void _SYNCLK_clockTick(void);
 void _SYNCLK_clockSkip(void);
 void _SYNCLK_setPhaseCorrectionStale(void);
-
 
 #endif

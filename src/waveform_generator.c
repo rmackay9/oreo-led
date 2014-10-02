@@ -1,6 +1,6 @@
 /**********************************************************************
 
-  waveform_generator.c - 
+  waveform_generator.c - implementation, see header for description
 
   Authors: 
     Nate Fisher
@@ -20,9 +20,9 @@
 #include "math.h"
 #include "waveform_generator.h"
 
-
-// register the pattern generator calculated values
-//  with (up to three) hardware waveform outputs
+// setup wavegen hardware; assign inputs and outputs
+//  - register the pattern generator calculated values
+//    with (up to three) hardware waveform outputs
 void WG_init(uint8_t** channelValueRefs, int channelCount) {
 
     // setup cpu hardware for PWM and timer operation

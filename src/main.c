@@ -1,6 +1,8 @@
 /**********************************************************************
 
-  main.c - 
+  main.c - implementation of aircraft lighting system. Commands to the 
+   system are transmitted via a common I2C bus, connecting all lighting 
+   units (slave devices) with the Pixhawk (as master transmitter). 
 
   Authors: 
     Nate Fisher
@@ -8,7 +10,8 @@
   Created at: 
     Tue Aug 10 12:47:31 JST 1993
 
-  Copyright (C) 2015 3DRobotics, Inc.
+  <License> 
+  <Copyright>
 
 **********************************************************************/
 
