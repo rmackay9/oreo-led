@@ -23,7 +23,7 @@
 #include "utilities.h"
 
 // TODO replace with hardware address detection pins
-#define TWI_SLAVE_ADDRESS   0xA0
+#define TWI_SLAVE_ADDRESS   0xD0
 
 // TWI buffer
 int TWI_Ptr;
@@ -42,13 +42,14 @@ char TWI_Buffer[TWI_MAX_BUFFER_SIZE];
 #define TWI_SLAW_RCVD       (TWSR == 0x60) 
 #define TWI_SLAR_RCVD       (TWSR == 0xA8) 
 #define TWI_SLAW_DATA_RCVD  (TWSR == 0x80) 
-#define TWI_GENCALL_RCVD    (TWSR == 0x70) 
+#define TWI_GENCALL_RCVD    (TWSR == 0x90) 
 #define TWI_STOP_RCVD       (TWSR == 0xA0) 
 
 // TWI application status flags
 uint8_t TWI_isCombinedFormat;
 uint8_t TWI_isSubAddrByte;
 uint8_t TWI_isSelected;
+uint8_t TWI_isBufferAvailable;
 
 // callbacks
 void (*generalCallCB)();

@@ -13,6 +13,10 @@
 
 **********************************************************************/
 
+#include <avr/interrupt.h>
+#include <avr/sleep.h>
+#include <avr/cpufunc.h>
+
 #include <avr/io.h>
 #include "math.h"
 #include "synchro_clock.h"
@@ -23,6 +27,7 @@ void SYNCLK_init(void) {
     // init instance members
     _self_synchro_clock.clockSkips                = 0;
     _self_synchro_clock.isPhaseCorrectionUpdated  = 1;
+    _self_synchro_clock.timerOverflows            = 0;
     _self_synchro_clock.isCommandFresh            = 0;
     _self_synchro_clock.nodePhaseError            = 0;
     _self_synchro_clock.nodeTimeOffset            = 0;
@@ -40,10 +45,35 @@ double SYNCLK_getClockPosition(void) {
 void SYNCLK_updateClock(void) {
 
     // mark time in light manager
-    _SYNCLK_clockTick();
+    _self_synchro_clock.timerOverflows++;
 
     // phase correction can be updated
-    _SYNCLK_setPhaseCorrectionStale();
+    _self_synchro_clock.isPhaseCorrectionUpdated = 0;
+
+}
+
+// increment clock and also implement phase adjustment
+void SYNCLK_procClockUpdate(void) {
+
+    // adjust clock for phase error
+    while (_self_synchro_clock.clockSkips && _self_synchro_clock.timerOverflows) {
+            _self_synchro_clock.timerOverflows--;
+            _self_synchro_clock.clockSkips--;
+    }
+
+    // advance this node's clock time
+    while(_self_synchro_clock.timerOverflows > 0) {
+
+        _self_synchro_clock.timerOverflows--;
+        
+        // increment lighting pattern effect clock
+        if (_self_synchro_clock.nodeTime == (_SYNCLK_CLOCK_TOP - _SYNCLK_CLOCK_RESET)) {
+            _self_synchro_clock.nodeTime = _SYNCLK_CLOCK_RESET;
+        } else {
+            _self_synchro_clock.nodeTime += _SYNCLK_TICK_INCREMENT;
+        } 
+
+    }
 
 }
 
@@ -78,14 +108,16 @@ void SYNCLK_calcPhaseCorrection(void) {
     // to minimize some chasing
     if (fabs(_self_synchro_clock.nodePhaseError) >= _SYNCLK_CORRECTION_THRESHOLD) { 
 
+        int correction = fabs(_self_synchro_clock.nodePhaseError/2);
+
         // if phase error negative, add an extra clock tick
         // if positive, remove a clock tick
         if (_self_synchro_clock.nodePhaseError < 0) {
-            _SYNCLK_clockTick();
-            _self_synchro_clock.nodePhaseError++;
+            _SYNCLK_clockTick(correction);
+            _self_synchro_clock.nodePhaseError += correction;
         } else {
-            _SYNCLK_clockSkip();
-            _self_synchro_clock.nodePhaseError--;
+            _SYNCLK_clockSkip(correction);
+            _self_synchro_clock.nodePhaseError -= correction;
         }        
         
     }
@@ -95,32 +127,19 @@ void SYNCLK_calcPhaseCorrection(void) {
 
 }
 
-// increment clock and also apply
-//  adjustment if local phase is behind 
-//  system phase
-void _SYNCLK_clockTick(void) {
+// clock adjustment to be applied
+//  if local phase is behind system
+void _SYNCLK_clockTick(int count) {
 
-
-    // adjust clock for phase error
-    if (_self_synchro_clock.clockSkips > 0) { 
-        _self_synchro_clock.clockSkips--;
-        return;
-    }
-
-    // increment lighting pattern effect clock
-    if (_self_synchro_clock.nodeTime < _SYNCLK_CLOCK_TOP) {
-        _self_synchro_clock.nodeTime += _SYNCLK_TICK_INCREMENT;
-    } else {
-        _self_synchro_clock.nodeTime = _SYNCLK_CLOCK_RESET;
-    } 
+    _self_synchro_clock.timerOverflows = count;
 
 }
 
 // clock adjustment to be applied
 //  if local phase is ahead of system
-void _SYNCLK_clockSkip(void) {
+void _SYNCLK_clockSkip(int count) {
 
-    _self_synchro_clock.clockSkips++;
+    _self_synchro_clock.clockSkips = count;
 
 }
 
@@ -131,14 +150,12 @@ void SYNCLK_recordPhaseError(void) {
 
     _self_synchro_clock.nodeTimeOffset = _self_synchro_clock.nodeTime;
 
+/*
+    _self_synchro_clock.clockSkips                = 0;
+    _self_synchro_clock.timerOverflows            = 0;
+    _self_synchro_clock.nodePhaseError            = 0;
+    _self_synchro_clock.nodeTimeOffset            = 0;
+    _self_synchro_clock.nodeTime                  = 0;
+*/
+    
 }
-
-// indicate to mainloop that a calcPhaseCorrection
-//  can be called again
-void _SYNCLK_setPhaseCorrectionStale(void) {
-
-    // recompute phase correction 
-    //  in next mainloop
-    _self_synchro_clock.isPhaseCorrectionUpdated = 0;
-}
-

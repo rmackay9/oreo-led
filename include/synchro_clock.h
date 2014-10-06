@@ -30,6 +30,7 @@
 #ifndef  SYNCHRO_CLOCK_H
 #define  SYNCHRO_CLOCK_H
 
+#include <avr/io.h>
 #include "utilities.h"
 
 // TODO: make an init function to handle these calculations
@@ -37,7 +38,7 @@
 //  - ticks at 8Mhz/8/8/256 (= 488.28125 Hz)
 //  - then 488.28125/s * 4s = 1953.125 ticks in 4s period
 //  - increment by 32 each tick yields a clock size of 62500
-static const double _SYNCLK_CLOCK_RESET             = 0;
+static const uint32_t _SYNCLK_CLOCK_RESET           = 0;
 static const double _SYNCLK_CLOCK_TOP               = 62500;
 static const double _SYNCLK_TICK_INCREMENT          = 32;
 
@@ -46,11 +47,12 @@ static const double _SYNCLK_CORRECTION_THRESHOLD    = 2;
 
 // synchro clock state structure
 typedef struct _Syncro_Clock_State {
-    int clockSkips;
+    uint8_t clockSkips;
     char isPhaseCorrectionUpdated;
+    uint32_t timerOverflows;
     char isCommandFresh;
-    int16_t nodePhaseError;
-    int16_t nodeTimeOffset;
+    uint32_t nodePhaseError;
+    uint32_t nodeTimeOffset;
     uint32_t nodeTime;
     void (*recordPhaseError)();
 } SyncroClock;
@@ -63,8 +65,8 @@ double SYNCLK_getClockPosition(void);
 void SYNCLK_updateClock(void);
 void SYNCLK_recordPhaseError(void);
 void SYNCLK_calcPhaseCorrection(void);
-void _SYNCLK_clockTick(void);
-void _SYNCLK_clockSkip(void);
-void _SYNCLK_setPhaseCorrectionStale(void);
+void _SYNCLK_clockTick(int);
+void _SYNCLK_clockSkip(int);
+void SYNCLK_procClockUpdate(void);
 
 #endif

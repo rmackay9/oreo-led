@@ -19,16 +19,13 @@
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
 #include <avr/cpufunc.h>
-
 #include "math.h"
-
 #include "pattern_generator.h"
 #include "light_pattern_protocol.h"
 #include "synchro_clock.h"
 #include "twi_manager.h"
 #include "waveform_generator.h"
 #include "node_manager.h"
-
 
 int main(void) {
     
@@ -75,6 +72,15 @@ int main(void) {
     // application mainloop 
     while(1) {
 
+        // parse commands per interface contract
+        //  and update pattern generators accordingly
+        LPP_processBuffer(TWI_getBuffer(), TWI_getBufferSize());
+
+        // calculate time adjustment needed to 
+        //  sync up with system clock signal
+        SYNCLK_calcPhaseCorrection();
+        SYNCLK_procClockUpdate(); 
+
         // run light effect calculations based
         //  on synchronized clock reference
         PG_calc(&pgRed, SYNCLK_getClockPosition());
@@ -84,16 +90,6 @@ int main(void) {
         // update LED PWM duty cycle
         //  with values computed in pattern generator
         WG_updatePWM();
-
-        // calculate time adjustment needed to 
-        //  sync up with system clock signal
-        SYNCLK_calcPhaseCorrection();
-
-        // parse commands per interface contract
-        //  and update pattern generators accordingly
-        LPP_processBuffer(TWI_getBuffer(), TWI_getBufferSize());
-
-        // TODO implement sleep for duty cycle manangement
 
     }
 

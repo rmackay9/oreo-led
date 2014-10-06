@@ -26,9 +26,9 @@ void PG_init(PatternGenerator* self) {
     self->pattern             = PATTERN_OFF;
     self->speed               = 1;
     self->phase               = 0;
-    self->amplitude           = 0;
-    self->bias                = 0;
-    self->value               = 0;
+    self->amplitude           = 50;
+    self->bias                = 50;
+    self->value               = 00;
 
 }
 
