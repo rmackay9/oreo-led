@@ -104,6 +104,14 @@ void LPP_setCommandRefreshed() {
 }
 
 void _LPP_setPattern(int patternEnum) {
+
+    // if changing patterns, set defaults
+    if (_self_pattern_protocol.greenPattern->pattern != patternEnum) {
+        _self_pattern_protocol.redPattern->cyclesRemaining = 1;
+        _self_pattern_protocol.greenPattern->cyclesRemaining = 1;
+        _self_pattern_protocol.bluePattern->cyclesRemaining = 1;
+    }
+
     _self_pattern_protocol.redPattern->pattern = patternEnum;
     _self_pattern_protocol.greenPattern->pattern = patternEnum;
     _self_pattern_protocol.bluePattern->pattern = patternEnum;

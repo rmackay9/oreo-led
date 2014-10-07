@@ -71,10 +71,9 @@ void _WG_configureHardware(void) {
     // TIMER0 Config
     // Output compare mode
     // Set timer clock speed
-    TCCR0A = ZERO | TCCR0A_CLOCK_DIV8;
+    TCCR0A = ZERO | TCCR0A_CLOCK_DIV64;
 
     // TIMER0 Interrupts
-    // overflow interrupt 
     // output compare match interrupt
     TIMSK0 = ZERO | TIMSK0_TOIE0 | TIMSK0_OCIE0B;
 
@@ -86,9 +85,14 @@ void _WG_configureHardware(void) {
 void WG_updatePWM(void) {
 
     // rescale channel percentage values to 0->240
-    int channel_1_pwm_value = (fmod(*(_self_waveform_gen.channel_target[0]), 100.0)/100.0) * PWM_MAX_VALUE;
-    int channel_2_pwm_value = (fmod(*(_self_waveform_gen.channel_target[1]), 100.0)/100.0) * PWM_MAX_VALUE;
-    
+    int channel_1_pwm_value = (fmod(*(_self_waveform_gen.channel_target[0]), 256.0)/256.0) * PWM_MAX_VALUE;
+    int channel_2_pwm_value = (fmod(*(_self_waveform_gen.channel_target[1]), 256.0)/256.0) * PWM_MAX_VALUE;
+    int channel_3_pwm_value = (fmod(*(_self_waveform_gen.channel_target[2]), 256.0)/256.0) * (PWM_MAX_VALUE-10) + 10;
+
+    // assign chan1& chan2 values directly to PWM timers
+    *(_self_waveform_gen.channel_1_output) = channel_1_pwm_value;
+    *(_self_waveform_gen.channel_2_output) = channel_2_pwm_value;
+
     // set pins to input mode, if value is actually zero
     if (channel_1_pwm_value == 0) DDRB &= 0b11111011;   //PB2 reset to input
     else DDRB |= 0b00000100;                            //PB2 set to output
@@ -97,14 +101,14 @@ void WG_updatePWM(void) {
     if (channel_2_pwm_value == 0) DDRB &= 0b11111101;   //PB1 reset to input
     else DDRB |= 0b00000010;                            //PB1 set to output
 
-    // assign chan 1&2 values directly to PWM timers
-    *(_self_waveform_gen.channel_1_output) = channel_1_pwm_value;
-    *(_self_waveform_gen.channel_2_output) = channel_2_pwm_value;
 
-    // chan 3 value must be handled differently so we can set the
-    //  compare value at top of timer cycle. Also, offsetting the min
-    //  value by 14 to allow for a zero percent duty cycle to be achieved
-    _self_waveform_gen.channel_3_output = ((fmod(*(_self_waveform_gen.channel_target[2]), 100.0)/100.0) * (PWM_MAX_VALUE-14)) + 14;
+
+    // assign channel 3 value to a proxy
+    _self_waveform_gen.channel_3_output = channel_3_pwm_value;
+    
+    // implement a lower threshold for channel3 to enable full off
+    _self_waveform_gen.channel_3_enable = (_self_waveform_gen.channel_3_output > 10) ? 1 : 0;
+
 
 }
 
@@ -112,31 +116,26 @@ void WG_updatePWM(void) {
 ISR(TIMER1_OVF_vect) {
 
     // mark time in light manager
-    _self_waveform_gen.overflowCallback();
-
+    if (_self_waveform_gen.overflowCallback)
+        _self_waveform_gen.overflowCallback();
+ 
 }
 
-// Implement Channel 3 PWM Signal 
 ISR(TIMER0_OVF_vect) {
-
-    // if channel 3 value is below threshold,
-    // do not turn on the output pin at all
-    if (_self_waveform_gen.channel_3_output > 15) {
-
-        // set channel 3 output pin at start of PWM cycle
-        PORTB |= 0b00000001; 
-
-    } else { 
-
-        // keep output off if below threshold
-        PORTB &= 0b11111110;
-        _self_waveform_gen.channel_3_output = 15;
-
-    }
 
     // set compare register value
     OCR0B = _self_waveform_gen.channel_3_output;
- 
+
+    // if channel 3 value is below threshold,
+    // do not turn on the output pin at all
+    if (_self_waveform_gen.channel_3_enable) {
+        // set channel 3 output pin at start of PWM cycle
+        PORTB |= 0b00000001; 
+    } else { 
+        // keep output off if below threshold
+        PORTB &= 0b11111110;
+    }
+
 }
 
 // Implement Channel 3 PWM Signal 

@@ -20,7 +20,7 @@
 
 void PG_init(PatternGenerator* self) {
     
-    self->cyclesRemaining     = 0; 
+    self->cyclesRemaining     = -1; 
     self->theta               = 0;
     self->isNewCycle          = 0;
     self->pattern             = PATTERN_OFF;
@@ -68,13 +68,14 @@ void PG_calc(PatternGenerator* self, double clock_position) {
 
 // PRIVATE METHODS BELOW
 
+// clock position in radians
 void _PG_calcTheta(PatternGenerator* self, double clock_position) {
 
     // calculate theta, in radians, from the current timer
     double theta_at_speed = clock_position * self->speed;
 
     // calculate the speed and phase adjusted theta
-    double new_theta = fmod(theta_at_speed + UTIL_degToRad(self->phase), _TWO_PI);
+    double new_theta = fmod(theta_at_speed + self->phase, _TWO_PI);
 
     // set zero crossing flag
     self->isNewCycle = (self->theta > new_theta) ? 1 : 0;
@@ -131,72 +132,50 @@ void _PG_patternSiren(PatternGenerator* self) {
 
 void _PG_patternFadeIn(PatternGenerator* self) {
 
-    if (self->cyclesRemaining >= 0) {
+    if (self->cyclesRemaining > 0) {
+
+        self->value = 0; 
+
+    } else if (self->cyclesRemaining == 0) {
 
         // calculate the carrier signal 
         double carrier = sin(self->theta/4);
 
-        // start pattern with output low
-        if (self->cyclesRemaining >= 1) {
+        // update output
+        self->value = self->amplitude * carrier;
 
-            self->value = 0; 
-        
-        } else {
-
-            // not done with current cycle
-            if (!self->isNewCycle) {
-
-                // update output
-                self->value = self->amplitude * carrier;
-
-            }
-
-        }
-
-        // decrement the cycles remaining 
-        if (self->isNewCycle) self->cyclesRemaining--;
-
-    // finish pattern with value high
     } else {
 
         self->value = self->amplitude;
 
     }
 
+    // decrement the cycles remaining 
+    if (self->isNewCycle && self->cyclesRemaining >= 0) self->cyclesRemaining--;
+
 }
 
 void _PG_patternFadeOut(PatternGenerator* self) {
 
-    if (self->cyclesRemaining >= 0) {
+    if (self->cyclesRemaining > 0) {
+
+        self->value = self->amplitude; 
+
+    } else if (self->cyclesRemaining == 0) {
 
         // calculate the carrier signal 
         double carrier = cos(self->theta/4);
 
-        // start pattern with output high 
-        if (self->cyclesRemaining >= 1) {
+        // update output
+        self->value = self->amplitude * carrier;
 
-            self->value = self->amplitude; 
-        
-        } else {
-
-            // not done with current cycle
-            if (!self->isNewCycle) {
-
-                // update output
-                self->value = self->amplitude * carrier;
-
-            }
-
-        }
-
-        // decrement the cycles remaining at each zero crossing
-        if (self->isNewCycle) self->cyclesRemaining--;
-
-    // finish pattern with value zero
     } else {
 
         self->value = 0;
 
     }
+
+    // decrement the cycles remaining 
+    if (self->isNewCycle && self->cyclesRemaining >= 0) self->cyclesRemaining--;
 
 }

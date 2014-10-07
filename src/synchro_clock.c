@@ -140,5 +140,6 @@ void _SYNCLK_setPhaseCorrectionStale(void) {
     // recompute phase correction 
     //  in next mainloop
     _self_synchro_clock.isPhaseCorrectionUpdated = 0;
+
 }
 

@@ -31,6 +31,7 @@ void TWI_init(int deviceId) {
 // specify callback to be executed
 //  when device receives a general call
 void TWI_onGeneralCall(void (*cb)()) {
+
     generalCallCB = cb;
 
 }
@@ -39,18 +40,21 @@ void TWI_onGeneralCall(void (*cb)()) {
 //  when device receives a completed 
 //  data packet (at STOP signal)
 void TWI_onDataReceived(void (*cb)()) {
+
     dataReceivedCB = cb;
 
 }
 
 // returns pointer to TWI data buffer
 char* TWI_getBuffer(void) {
+
     return TWI_Buffer;
 
 }
 
 // returns buffer pointer
 int TWI_getBufferSize(void) {
+
     return TWI_Ptr;
 
 }
@@ -58,10 +62,11 @@ int TWI_getBufferSize(void) {
 // TWI ISR
 ISR(TWI_vect) {
 
+    // general call detected
     if (TWI_GENCALL_RCVD) {
 
         // execute callback when general call received
-        generalCallCB();
+        if (generalCallCB) generalCallCB();
 
     // record the end of a transmission if 
     //   stop bit received
@@ -69,13 +74,14 @@ ISR(TWI_vect) {
     } else if (TWI_STOP_RCVD) {
 
         // execute callback when data received
-        dataReceivedCB();
+        if (dataReceivedCB) dataReceivedCB();
         
     // every message with begin here
     // reset pointer
     } else if (TWI_SLAW_RCVD) {
 
         TWI_Ptr = 0;
+        TWI_isBufferAvailable = 1;
 
     // if this unit was addressed and we're receiving
     //   data, continue capturing into buffer
@@ -83,9 +89,11 @@ ISR(TWI_vect) {
 
         // record received data 
         // until buffer is full
-        if (TWI_Ptr < TWI_MAX_BUFFER_SIZE) {
+        if (TWI_Ptr == TWI_MAX_BUFFER_SIZE) 
+            TWI_isBufferAvailable = 0;
+
+        if (TWI_isBufferAvailable)
             TWI_Buffer[TWI_Ptr++] = TWDR;
-        } 
 
     }
 

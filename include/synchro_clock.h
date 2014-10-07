@@ -39,7 +39,7 @@
 //  - increment by 32 each tick yields a clock size of 62500
 static const double _SYNCLK_CLOCK_RESET             = 0;
 static const double _SYNCLK_CLOCK_TOP               = 62500;
-static const double _SYNCLK_TICK_INCREMENT          = 32;
+static const double _SYNCLK_TICK_INCREMENT          = 4;
 
 // TODO: make a setter routine to adjust agressiveness
 static const double _SYNCLK_CORRECTION_THRESHOLD    = 2;
