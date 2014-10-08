@@ -5,11 +5,8 @@
   Authors: 
     Nate Fisher
 
-  Created at: 
+  Created: 
     Wed Oct 1, 2014
-
-  <License> 
-  <Copyright>
 
 **********************************************************************/
 
@@ -106,6 +103,7 @@ void LPP_setCommandRefreshed() {
 void _LPP_setPattern(int patternEnum) {
 
     // if changing to fadein/fadeout, set cycles to 1
+    // TODO create a more robust method of setting defaults
     if (_self_pattern_protocol.greenPattern->pattern != patternEnum &&
         ((patternEnum == PATTERN_FADEIN) | 
          (patternEnum == PATTERN_FADEOUT))) {
@@ -116,6 +114,7 @@ void _LPP_setPattern(int patternEnum) {
 
     }
 
+    // assign each light pattern 
     _self_pattern_protocol.redPattern->pattern = patternEnum;
     _self_pattern_protocol.greenPattern->pattern = patternEnum;
     _self_pattern_protocol.bluePattern->pattern = patternEnum;
@@ -127,6 +126,8 @@ void _LPP_processParameterUpdate(LightProtocolParameter param, int start, char* 
     // validate arguments
     if (!buffer) return;
 
+    // temp storage variables to reduce calculations
+    // in each case statement
     uint16_t received_uint;
     uint16_t received_uint_radians;
     
@@ -158,9 +159,9 @@ void _LPP_processParameterUpdate(LightProtocolParameter param, int start, char* 
 
         case PARAM_PERIOD: 
             received_uint = UTIL_charToInt(buffer[start], buffer[start+1]);
-            _self_pattern_protocol.redPattern->speed    = 4000.0 / received_uint;
-            _self_pattern_protocol.greenPattern->speed  = 4000.0 / received_uint;
-            _self_pattern_protocol.bluePattern->speed   = 4000.0 / received_uint;
+            _self_pattern_protocol.redPattern->speed    = MAX_PATTERN_PERIOD / received_uint;
+            _self_pattern_protocol.greenPattern->speed  = MAX_PATTERN_PERIOD / received_uint;
+            _self_pattern_protocol.bluePattern->speed   = MAX_PATTERN_PERIOD / received_uint;
             break;
 
         case PARAM_REPEAT: 
@@ -187,6 +188,8 @@ void _LPP_processParameterUpdate(LightProtocolParameter param, int start, char* 
 
 }
 
+// Pre-canned patterns and setting combinations
+// tuned through testing on lighting hardware
 void _LPP_setParamMacro(LightParamMacro macro) {
 
     switch(macro) {

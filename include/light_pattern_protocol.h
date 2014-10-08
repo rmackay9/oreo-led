@@ -8,11 +8,8 @@
   Authors: 
     Nate Fisher
 
-  Created at: 
+  Created: 
     Wed Oct 1, 2014
-
-  <License> 
-  <Copyright>
 
 **********************************************************************/
 
@@ -22,6 +19,8 @@
 #include "pattern_generator.h"
 #include "utilities.h"
   
+#define MAX_PATTERN_PERIOD 4000.0
+
 typedef enum _Light_Protocol_Parameter {
     PARAM_BIAS_RED,
     PARAM_BIAS_GREEN,

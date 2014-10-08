@@ -16,11 +16,8 @@
   Authors: 
     Nate Fisher
 
-  Created at: 
+  Created: 
     Wed Oct 1, 2014
-
-  <License> 
-  <Copyright>
 
 **********************************************************************/
 

@@ -7,11 +7,8 @@
   Authors: 
     Nate Fisher
 
-  Created at: 
-    Tue Aug 10 12:47:31 JST 1993
-
-  <License> 
-  <Copyright>
+  Created: 
+    Wed Oct 1, 2014
 
 **********************************************************************/
 
@@ -92,8 +89,6 @@ int main(void) {
         // parse commands per interface contract
         //  and update pattern generators accordingly
         LPP_processBuffer(TWI_getBuffer(), TWI_getBufferSize());
-
-        // TODO implement sleep for duty cycle manangement
 
     }
 
