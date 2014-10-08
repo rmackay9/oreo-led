@@ -2,6 +2,7 @@
 
   pattern_generator.c - implementation, see header for description
 
+
   Authors: 
     Nate Fisher
 

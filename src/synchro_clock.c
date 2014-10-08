@@ -2,6 +2,7 @@
 
   synchro_clock.c - implementation, see header for description
 
+
   Authors: 
     Nate Fisher
 

@@ -5,7 +5,6 @@
     be specified in the header file.
 
 
-
   Authors: 
     Nate Fisher
 

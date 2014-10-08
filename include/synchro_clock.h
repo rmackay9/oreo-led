@@ -14,8 +14,6 @@
       were previously computed will be automatically applied.
 
 
-
-
   Authors: 
     Nate Fisher
 

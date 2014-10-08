@@ -2,6 +2,7 @@
 
   light_pattern_protocol.c - implementation, see header for description
 
+
   Authors: 
     Nate Fisher
 
