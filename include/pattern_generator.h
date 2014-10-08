@@ -29,6 +29,9 @@
 
 #include "utilities.h"
 
+#define CYCLES_INFINITE -2
+#define CYCLES_STOP -1
+
 typedef enum _Pattern_Enum {
     PATTERN_OFF, 
     PATTERN_SINE, 

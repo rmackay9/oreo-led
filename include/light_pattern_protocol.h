@@ -32,8 +32,24 @@ typedef enum _Light_Protocol_Parameter {
     PARAM_PERIOD,
     PARAM_REPEAT,
     PARAM_PHASEOFFSET,
+    PARAM_MACRO,
     PARAM_ENUM_COUNT
 } LightProtocolParameter;
+
+typedef enum _Light_Param_Macro {
+    PARAM_MACRO_RESET,
+    PARAM_MACRO_FWUPDATE,
+    PARAM_MACRO_AUTOPILOT,
+    PARAM_MACRO_CALIBRATE,
+    PARAM_MACRO_POWERON,
+    PARAM_MACRO_POWEROFF,
+    PARAM_MACRO_RED,
+    PARAM_MACRO_GREEN,
+    PARAM_MACRO_BLUE,
+    PARAM_MACRO_AMBER,
+    PARAM_MACRO_WHITE,
+    PARAM_MACRO_ENUM_COUNT
+} LightParamMacro;
 
 static const short int LightParameterSize[PARAM_ENUM_COUNT] = {
     1,  // Bias 
@@ -44,7 +60,8 @@ static const short int LightParameterSize[PARAM_ENUM_COUNT] = {
     1,  // Amp 
     2,  // Period
     1,  // Repeat
-    2   // Phase Offset
+    2,  // Phase Offset
+    1   // Param Macro
 };
 
 typedef struct _Light_Pattern_Protocol {
@@ -60,8 +77,9 @@ void LPP_setRedPatternGen(PatternGenerator*);
 void LPP_setGreenPatternGen(PatternGenerator*);
 void LPP_setBluePatternGen(PatternGenerator*);
 void LPP_processBuffer(char*, int);
-void _LPP_processParameterUpdate(PatternEnum, int, char*);
+void _LPP_processParameterUpdate(LightProtocolParameter, int, char*);
 void _LPP_setPattern(int);
+void _LPP_setParamMacro(LightParamMacro);
 
 #endif
   

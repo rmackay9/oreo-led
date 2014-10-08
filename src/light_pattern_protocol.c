@@ -105,23 +105,31 @@ void LPP_setCommandRefreshed() {
 
 void _LPP_setPattern(int patternEnum) {
 
-    // if changing patterns, set defaults
-    if (_self_pattern_protocol.greenPattern->pattern != patternEnum) {
-        _self_pattern_protocol.redPattern->cyclesRemaining = 1;
-        _self_pattern_protocol.greenPattern->cyclesRemaining = 1;
-        _self_pattern_protocol.bluePattern->cyclesRemaining = 1;
+    // if changing to fadein/fadeout, set cycles to 1
+    if (_self_pattern_protocol.greenPattern->pattern != patternEnum &&
+        ((patternEnum == PATTERN_FADEIN) | 
+         (patternEnum == PATTERN_FADEOUT))) {
+
+            _self_pattern_protocol.redPattern->cyclesRemaining = 1;
+            _self_pattern_protocol.greenPattern->cyclesRemaining = 1;
+            _self_pattern_protocol.bluePattern->cyclesRemaining = 1;
+
     }
 
     _self_pattern_protocol.redPattern->pattern = patternEnum;
     _self_pattern_protocol.greenPattern->pattern = patternEnum;
     _self_pattern_protocol.bluePattern->pattern = patternEnum;
+
 }
 
-void _LPP_processParameterUpdate(PatternEnum param, int start, char* buffer) {
+void _LPP_processParameterUpdate(LightProtocolParameter param, int start, char* buffer) {
 
     // validate arguments
     if (!buffer) return;
 
+    uint16_t received_uint;
+    uint16_t received_uint_radians;
+    
     switch(param) {
 
         case PARAM_BIAS_RED: 
@@ -149,9 +157,10 @@ void _LPP_processParameterUpdate(PatternEnum param, int start, char* buffer) {
             break;
 
         case PARAM_PERIOD: 
-            _self_pattern_protocol.redPattern->speed    = 4000.0 / UTIL_charToInt(buffer[start], buffer[start+1]);
-            _self_pattern_protocol.greenPattern->speed  = 4000.0 / UTIL_charToInt(buffer[start], buffer[start+1]);
-            _self_pattern_protocol.bluePattern->speed   = 4000.0 / UTIL_charToInt(buffer[start], buffer[start+1]);
+            received_uint = UTIL_charToInt(buffer[start], buffer[start+1]);
+            _self_pattern_protocol.redPattern->speed    = 4000.0 / received_uint;
+            _self_pattern_protocol.greenPattern->speed  = 4000.0 / received_uint;
+            _self_pattern_protocol.bluePattern->speed   = 4000.0 / received_uint;
             break;
 
         case PARAM_REPEAT: 
@@ -161,13 +170,143 @@ void _LPP_processParameterUpdate(PatternEnum param, int start, char* buffer) {
             break;
 
         case PARAM_PHASEOFFSET: 
-            _self_pattern_protocol.redPattern->phase    = UTIL_degToRad(UTIL_charToInt(buffer[start], buffer[start+1]));
-            _self_pattern_protocol.greenPattern->phase  = UTIL_degToRad(UTIL_charToInt(buffer[start], buffer[start+1]));
-            _self_pattern_protocol.bluePattern->phase   = UTIL_degToRad(UTIL_charToInt(buffer[start], buffer[start+1]));
+            received_uint_radians = UTIL_degToRad(UTIL_charToInt(buffer[start], buffer[start+1]));
+            _self_pattern_protocol.redPattern->phase    = received_uint_radians;
+            _self_pattern_protocol.greenPattern->phase  = received_uint_radians;
+            _self_pattern_protocol.bluePattern->phase   = received_uint_radians;
+            break;
+
+        case PARAM_MACRO:
+            if (buffer[start] < PARAM_MACRO_ENUM_COUNT)
+                _LPP_setParamMacro(buffer[start]);
             break;
 
         default:
             break;
+    }
+
+}
+
+void _LPP_setParamMacro(LightParamMacro macro) {
+
+    switch(macro) {
+
+        case PARAM_MACRO_FWUPDATE:
+            _self_pattern_protocol.redPattern->cyclesRemaining      = CYCLES_INFINITE;
+            _self_pattern_protocol.greenPattern->cyclesRemaining    = CYCLES_INFINITE;
+            _self_pattern_protocol.bluePattern->cyclesRemaining     = CYCLES_INFINITE;
+            _self_pattern_protocol.redPattern->speed                = 1;
+            _self_pattern_protocol.greenPattern->speed              = 1;
+            _self_pattern_protocol.bluePattern->speed               = 1;
+            _self_pattern_protocol.redPattern->phase                += UTIL_degToRad(270);
+            _self_pattern_protocol.greenPattern->phase              += UTIL_degToRad(90);
+            _self_pattern_protocol.bluePattern->phase               += UTIL_degToRad(180);
+            _self_pattern_protocol.redPattern->amplitude            = 120;
+            _self_pattern_protocol.redPattern->bias                 = 120;
+            _self_pattern_protocol.greenPattern->amplitude          = 50;
+            _self_pattern_protocol.greenPattern->bias               = 50;
+            _self_pattern_protocol.bluePattern->amplitude           = 70;
+            _self_pattern_protocol.bluePattern->bias                = 70;
+            _LPP_setPattern(PATTERN_SINE);
+            break;
+            
+        case PARAM_MACRO_AUTOPILOT:
+            _self_pattern_protocol.redPattern->cyclesRemaining      = CYCLES_INFINITE;
+            _self_pattern_protocol.greenPattern->cyclesRemaining    = CYCLES_INFINITE;
+            _self_pattern_protocol.bluePattern->cyclesRemaining     = CYCLES_INFINITE;
+            _self_pattern_protocol.redPattern->speed                = 1;
+            _self_pattern_protocol.greenPattern->speed              = 1;
+            _self_pattern_protocol.bluePattern->speed               = 1;
+            _LPP_setPattern(PATTERN_SINE);
+            break;
+            
+        case PARAM_MACRO_CALIBRATE:
+            _self_pattern_protocol.redPattern->cyclesRemaining      = CYCLES_INFINITE;
+            _self_pattern_protocol.greenPattern->cyclesRemaining    = CYCLES_INFINITE;
+            _self_pattern_protocol.bluePattern->cyclesRemaining     = CYCLES_INFINITE;
+            _self_pattern_protocol.redPattern->speed                = 12;
+            _self_pattern_protocol.greenPattern->speed              = 12;
+            _self_pattern_protocol.bluePattern->speed               = 12;
+            _self_pattern_protocol.redPattern->bias                 = 0;
+            _self_pattern_protocol.greenPattern->bias               = 0;
+            _self_pattern_protocol.bluePattern->bias                = 0;
+            _LPP_setPattern(PATTERN_STROBE);
+            break;
+            
+        case PARAM_MACRO_POWERON:
+            _self_pattern_protocol.redPattern->cyclesRemaining      = 1;
+            _self_pattern_protocol.greenPattern->cyclesRemaining    = 1;
+            _self_pattern_protocol.bluePattern->cyclesRemaining     = 1;
+            _self_pattern_protocol.redPattern->speed                = 1;
+            _self_pattern_protocol.greenPattern->speed              = 1;
+            _self_pattern_protocol.bluePattern->speed               = 1;
+            _LPP_setPattern(PATTERN_FADEIN);
+            break;
+            
+        case PARAM_MACRO_POWEROFF:
+            _self_pattern_protocol.redPattern->cyclesRemaining      = 1;
+            _self_pattern_protocol.greenPattern->cyclesRemaining    = 1;
+            _self_pattern_protocol.bluePattern->cyclesRemaining     = 1;
+            _self_pattern_protocol.redPattern->speed                = 1;
+            _self_pattern_protocol.greenPattern->speed              = 1;
+            _self_pattern_protocol.bluePattern->speed               = 1;
+            _LPP_setPattern(PATTERN_FADEOUT);
+            break;
+            
+        case PARAM_MACRO_RED:
+            _self_pattern_protocol.redPattern->amplitude            = 115;
+            _self_pattern_protocol.redPattern->bias                 = 120;
+            _self_pattern_protocol.greenPattern->amplitude          = 0;
+            _self_pattern_protocol.greenPattern->bias               = 0;
+            _self_pattern_protocol.bluePattern->amplitude           = 0;
+            _self_pattern_protocol.bluePattern->bias                = 0;
+            break;
+            
+        case PARAM_MACRO_GREEN:
+            _self_pattern_protocol.redPattern->amplitude            = 0;
+            _self_pattern_protocol.redPattern->bias                 = 0;
+            _self_pattern_protocol.greenPattern->amplitude          = 115;
+            _self_pattern_protocol.greenPattern->bias               = 120;
+            _self_pattern_protocol.bluePattern->amplitude           = 0;
+            _self_pattern_protocol.bluePattern->bias                = 0;
+            break;
+            
+        case PARAM_MACRO_BLUE:
+            _self_pattern_protocol.redPattern->amplitude            = 0;
+            _self_pattern_protocol.redPattern->bias                 = 0;
+            _self_pattern_protocol.greenPattern->amplitude          = 0;
+            _self_pattern_protocol.greenPattern->bias               = 0;
+            _self_pattern_protocol.bluePattern->amplitude           = 115;
+            _self_pattern_protocol.bluePattern->bias                = 120;
+            break;
+            
+        case PARAM_MACRO_AMBER:
+            _self_pattern_protocol.redPattern->amplitude            = 115;
+            _self_pattern_protocol.redPattern->bias                 = 120;
+            _self_pattern_protocol.greenPattern->amplitude          = 45;
+            _self_pattern_protocol.greenPattern->bias               = 50;
+            _self_pattern_protocol.bluePattern->amplitude           = 0;
+            _self_pattern_protocol.bluePattern->bias                = 0;
+            break;
+            
+        case PARAM_MACRO_WHITE:
+            _self_pattern_protocol.redPattern->amplitude            = 115;
+            _self_pattern_protocol.redPattern->bias                 = 120;
+            _self_pattern_protocol.greenPattern->amplitude          = 95;
+            _self_pattern_protocol.greenPattern->bias               = 100;
+            _self_pattern_protocol.bluePattern->amplitude           = 27;
+            _self_pattern_protocol.bluePattern->bias                = 30;
+            break;
+
+        case PARAM_MACRO_RESET:
+            PG_init(_self_pattern_protocol.redPattern);
+            PG_init(_self_pattern_protocol.greenPattern);
+            PG_init(_self_pattern_protocol.bluePattern);
+            break;
+
+        default:
+            break;
+
     }
 
 }

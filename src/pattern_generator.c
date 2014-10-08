@@ -20,7 +20,7 @@
 
 void PG_init(PatternGenerator* self) {
     
-    self->cyclesRemaining     = -1; 
+    self->cyclesRemaining     = CYCLES_INFINITE; 
     self->theta               = 0;
     self->isNewCycle          = 0;
     self->pattern             = PATTERN_OFF;
@@ -36,6 +36,11 @@ void PG_calc(PatternGenerator* self, double clock_position) {
 
     // update pattern instance theta 
     _PG_calcTheta(self, clock_position);
+
+    // decrement the cycles remaining until
+    // equals CYCLES_STOP
+    if (self->isNewCycle && self->cyclesRemaining >= 0) 
+        self->cyclesRemaining--;
 
     // update pattern value
     switch(self->pattern) {
@@ -99,44 +104,54 @@ void _PG_patternSolid(PatternGenerator* self) {
 
 void _PG_patternStrobe(PatternGenerator* self) {
 
-    // calculate the carrier signal 
-    // as square wave
-    double carrier = (sin(self->theta) > 0) ? 1 : 0;
+    if (self->cyclesRemaining != CYCLES_STOP) {
 
-    // value is a square wave with an 
-    // adjustable amplitude and bias
-    self->value = self->bias + self->amplitude * carrier;
+        // calculate the carrier signal 
+        // as square wave
+        double carrier = (sin(self->theta) > 0) ? 1 : 0;
+
+        // value is a square wave with an 
+        // adjustable amplitude and bias
+        self->value = self->bias + self->amplitude * carrier;
+
+    }
 
 }
 
 void _PG_patternSine(PatternGenerator* self) {
 
-    // calculate the carrier signal 
-    double carrier = sin(self->theta);
+    if (self->cyclesRemaining != CYCLES_STOP) {
 
-    // value is a sin function output of the form
-    // B + A * sin(theta)
-    self->value = self->bias + self->amplitude * carrier;
+        // calculate the carrier signal 
+        double carrier = sin(self->theta);
+
+        // value is a sin function output of the form
+        // B + A * sin(theta)
+        self->value = self->bias + self->amplitude * carrier;
+
+    }
 
 }
 
 void _PG_patternSiren(PatternGenerator* self) {
 
-    // calculate the carrier signal 
-    double carrier = sin(tan(self->theta)*.5);
+    if (self->cyclesRemaining != CYCLES_STOP) {
 
-    // value is an annoying strobe-like pattern
-    self->value = self->bias + self->amplitude * carrier;
+        // calculate the carrier signal 
+        double carrier = sin(tan(self->theta)*.5);
+
+        // value is an annoying strobe-like pattern
+        self->value = self->bias + self->amplitude * carrier;
+
+    }
 
 }
 
 void _PG_patternFadeIn(PatternGenerator* self) {
 
-    if (self->cyclesRemaining > 0) {
+    if (self->cyclesRemaining > 0) return;
 
-        self->value = 0; 
-
-    } else if (self->cyclesRemaining == 0) {
+    if (self->cyclesRemaining == 0) {
 
         // calculate the carrier signal 
         double carrier = sin(self->theta/4);
@@ -150,18 +165,13 @@ void _PG_patternFadeIn(PatternGenerator* self) {
 
     }
 
-    // decrement the cycles remaining 
-    if (self->isNewCycle && self->cyclesRemaining >= 0) self->cyclesRemaining--;
-
 }
 
 void _PG_patternFadeOut(PatternGenerator* self) {
 
-    if (self->cyclesRemaining > 0) {
+    if (self->cyclesRemaining > 0) return;
 
-        self->value = self->amplitude; 
-
-    } else if (self->cyclesRemaining == 0) {
+    if (self->cyclesRemaining == 0) {
 
         // calculate the carrier signal 
         double carrier = cos(self->theta/4);
@@ -174,8 +184,5 @@ void _PG_patternFadeOut(PatternGenerator* self) {
         self->value = 0;
 
     }
-
-    // decrement the cycles remaining 
-    if (self->isNewCycle && self->cyclesRemaining >= 0) self->cyclesRemaining--;
 
 }

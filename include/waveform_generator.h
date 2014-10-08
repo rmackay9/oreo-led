@@ -40,7 +40,7 @@
 
 #define TIMSK1_TOIE1          0b00000001
 
-#define PWM_MAX_VALUE         150
+#define PWM_MAX_VALUE         100
 
 typedef struct _Waveform_Generator_State {
     volatile uint8_t* channel_1_output;

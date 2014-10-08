@@ -3,12 +3,18 @@ Prioritized Tasks
 
 ## Features
 
-    [ ] repeat parameter for non-fade patterns
+    [x] repeat parameter for non-fade patterns
     [x] fadeOut pattern
     [x] fadeIn pattern
-
-    [ ] colorCycle pattern
     [x] phase parameter
+    [x] colorCycle pattern
+
+    [x] implement all patterns in SWF file as high-level macros
+        - PATTERN_MACRO_FWUPDATE, PATTERN_MACRO_AUTOPILOT, 
+        - PATTERN_MACRO_TOLAND, PATTERN_MACRO_CALIBRATE,
+        - PATTERN_MACRO_POWERON, PATTERN_MACRO_POWEROFF,
+        - PATTERN_MACRO_RED, PATTERN_MACRO_GREEN, PATTERN_MACRO_BLUE, 
+        - PATTERN_MACRO_AMBER, PATTERN_MACRO_WHITE
 
     [x] color setting limits: high and low
     [x] create parameters for pattern coefficients
@@ -23,8 +29,15 @@ Prioritized Tasks
 
     [ ] update interface contract document
     [ ] replace magic numbers
+    [ ] document examples as usage instructions
+    [ ] document instructions for programming
+    [ ] document known limitations, issues, notes
 
-Issues
+# Checkout
+
+    [ ] verify all requested features with actual pixhawk 
+
+Known Issues
 ======
 
 ## General 
@@ -35,9 +48,10 @@ Issues
         - fixed phase signal from arduino; set to correct period
     [x] un-addressed devices are activating SIREN pattern
         - fixed logic error in refactored TWI addressing code
-    [ ] fadein/fadeout are not fading correctly, likely issue with repeat param
+    [x] fadein/fadeout are not fading correctly, likely issue with repeat param
         - fixed issue with repeat parameter for fades, needs more work for other patterns
-    [ ] fadein/fadeout does not transition at some speeds, ie speed=3000 or speed=1000
+    [x] fadein/fadeout does not transition at some speeds, ie speed=3000 or speed=1000
+        - speeds must be a (higher) harmonic of the fundamental 4s period for continous animations
 
 ## Blue LED Fidelity
 
@@ -46,7 +60,7 @@ Issues
     [x] change pwm freq to improve low end dithering?
         - actually more of an issue with PWM register resolution
           increasing clock rate (inc instruction time and pwm freq) did not help
-    [ ] LEDs flickering every 4 sec, seems to be result of synchro
+    [x] LEDs flickering every 4 sec, seems to be result of synchro
         clock theta updates, possibly the comparison operation itself
         or even all TWI interrupts blocking PWM timer interrupts. Not critical
         at sufficiently large intensity values or animations with fast enough speed
@@ -72,15 +86,12 @@ Issues
     [ ] slaves freeze after a sequential phase offset command to each unit
         - appears to be side effect of arduino simulation
 
-Deferred
+Future Development
 ======
 
-    [ ] verify all requested features with actual pixhawk 
-    [ ] investigate proportional adjustments to phase error
-    [ ] hue parameters
     [ ] implement parameter reading function
     [ ] physical lines to set I2C address
-    [ ] implement all patterns in SWF file as macros
-
-
-
+    [ ] wait to start pattern animation until current value is reached for smoother transition
+    [ ] investigate proportional adjustments to phase error for faster correction
+    [ ] hue parameters
+    [ ] buffer parameters and apply at end of transmission
