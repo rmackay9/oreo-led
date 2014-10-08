@@ -29,9 +29,9 @@ Prioritized Tasks
 
     [ ] update interface contract document
     [x] replace magic numbers
-    [ ] document examples as usage instructions
-    [ ] document instructions for programming
-    [ ] document known limitations, issues, notes
+    [x] document examples as usage instructions
+    [x] document instructions for programming
+    [x] document known limitations, issues, notes
 
 # Checkout
 

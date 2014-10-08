@@ -52,9 +52,10 @@ void WG_onOverflow(void (*cb)()) {
 // setup cpu hardware for PWM and timer operation
 void _WG_configureHardware(void) {
 
-    // configure port B pins as output
-    DDRB    = 0xFF;
-    PORTB   = 0x00;
+    // configure PWM port B pins as output
+    // and set level to LOW
+    DDRB    |= 0b00000111; // 0 == input | 1 == output
+    PORTB    = 0;
 
     // TIMER1 Config
     // pwm mode and waveform generation mode

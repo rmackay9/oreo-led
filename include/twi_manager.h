@@ -18,9 +18,6 @@
 
 #include "utilities.h"
 
-// TODO replace with hardware address detection pins
-#define TWI_SLAVE_ADDRESS   0xC0
-
 // TWI buffer
 int TWI_Ptr;
 #define TWI_MAX_BUFFER_SIZE 100
@@ -55,6 +52,6 @@ void TWI_onGeneralCall(void (*)());
 void TWI_onDataReceived(void (*)());
 char* TWI_getBuffer(void);
 int TWI_getBufferSize(void);
-void TWI_init(int);
+void TWI_init(uint8_t);
 
 #endif

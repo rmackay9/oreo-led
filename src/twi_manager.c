@@ -18,9 +18,13 @@
 
 #include "twi_manager.h"
 
-void TWI_init(int deviceId) {
+void TWI_init(uint8_t deviceId) {
 
-    // TWI Config
+    // calculate slave address
+    // of the form: 0xA0, 0xB0, etc..
+    char TWI_SLAVE_ADDRESS = ((9 + deviceId) << 4) & 0xF0;
+
+    // TWI Config   
     TWAR = TWI_SLAVE_ADDRESS | TWAR_TWGCE;
     TWCR = ZERO | TWCR_TWEA | TWCR_TWEN | TWCR_TWIE;
 
