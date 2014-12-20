@@ -27,7 +27,7 @@ void TWI_init(uint8_t deviceId) {
     // TWI Config   
     TWAR = TWI_SLAVE_ADDRESS | TWAR_TWGCE;
     TWCR = ZERO | TWCR_TWEA | TWCR_TWEN | TWCR_TWIE;
-
+    TWHSR = TWHSR_TWHS;	// enable 400kHz I2C
 }
 
 // specify callback to be executed
