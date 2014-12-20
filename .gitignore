@@ -1,1 +1,7 @@
 build/
+*.d
+*.eep
+*.hex
+*.o
+.project
+.cproject
