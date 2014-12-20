@@ -21,8 +21,8 @@
 void TWI_init(uint8_t deviceId) {
 
     // calculate slave address
-    // of the form: 0xA0, 0xB0, etc..
-    char TWI_SLAVE_ADDRESS = ((9 + deviceId) << 4) & 0xF0;
+    // 8-bit address is 0xD0, 0xD2, 0xD4, 0xD6, 7-bit is 0x68 ~ 0x6B
+    char TWI_SLAVE_ADDRESS = (0xD0 + (deviceId << 1));
 
     // TWI Config   
     TWAR = TWI_SLAVE_ADDRESS | TWAR_TWGCE;
