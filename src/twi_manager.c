@@ -20,6 +20,13 @@
 
 void TWI_init(uint8_t deviceId) {
 
+    // configure debug pin (PB4) for twi bus
+    //  error detection, set PB4 to output low.
+    //  if PB4 is ever asserted high, an error has
+    //  been detected
+    DDRB |= 0b00010000; 
+    PORTB &= 0b11101111; 
+
     // calculate slave address
     // 8-bit address is 0xD0, 0xD2, 
     //   0xD4, 0xD6, 7-bit is 0x68 ~ 0x6B
@@ -68,7 +75,7 @@ int TWI_getBufferSize(void) {
 ISR(TWI_vect) {
 
     // bus failure
-    if (TWSR == 0) {
+    if (TWI_BUS_ERROR) {
 
         // release clock line and send stop bit
         //   in the event of a bus failure detected
@@ -106,6 +113,12 @@ ISR(TWI_vect) {
 
         if (TWI_isBufferAvailable)
             TWI_Buffer[TWI_Ptr++] = TWDR;
+
+    } else {
+
+        // default case 
+        //  assert PB4 for debug
+        PORTB |= 0b00010000; 
 
     }
 

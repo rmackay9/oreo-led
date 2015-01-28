@@ -34,6 +34,7 @@ char TWI_Buffer[TWI_MAX_BUFFER_SIZE];
 
 // TWI status definitions, as found in the
 // device datasheet
+#define TWI_BUS_ERROR       (TWSR == 0x00) 
 #define TWI_SLAW_RCVD       (TWSR == 0x60) 
 #define TWI_SLAR_RCVD       (TWSR == 0xA8) 
 #define TWI_SLAW_DATA_RCVD  (TWSR == 0x80) 
