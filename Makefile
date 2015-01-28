@@ -15,7 +15,9 @@ RM=rm -f
 MV=mv 
 
 # build commands
-PROG=avrdude -c dragon_isp -p attiny88 -V 
+#PROGRAMMER=dragon_isp
+PROGRAMMER=jtag3isp
+PROG=avrdude -c ${PROGRAMMER} -p attiny88 -V 
 AVROBJCOPY=avr-objcopy 
 AVRSIZE=avr-size 
 AVRGCC=avr-gcc 

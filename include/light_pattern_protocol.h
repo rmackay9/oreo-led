@@ -19,7 +19,9 @@
 
 #include "pattern_generator.h"
 #include "utilities.h"
-  
+
+// for use in solo oreoleds, this numver must match the period defined 
+//   in the synchro clock header
 #define MAX_PATTERN_PERIOD 4000.0
 
 typedef enum _Light_Protocol_Parameter {
