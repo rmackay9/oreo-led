@@ -28,15 +28,16 @@
 #include "utilities.h"
 
 // TODO: make an init function to handle these calculations
-// creates a period of exactly 4s with:
-//  - ticks at 8Mhz/8/8/256 (= 488.28125 Hz)
-//  - then 488.28125/s * 4s = 1953.125 ticks in 4s period
-//  - increment by 32 each tick yields a clock size of 62500
+// creates a synchronization period of exactly 4s with:
+//  - ticks (timer overflows) at 3906.25 Hz
+//       8Mhz (CPU) / 8 (TCCR1B div) / 256 (PWM-8bit)
+//  - 3906.25/s * 4s = 15625 ticks in 4s period
+//  - increment by 4 each tick yields a clock TOP size of 62500
 static const double _SYNCLK_CLOCK_RESET             = 0;
 static const double _SYNCLK_CLOCK_TOP               = 62500;
 static const double _SYNCLK_TICK_INCREMENT          = 4;
 
-// TODO: make a setter routine to adjust agressiveness
+// TODO: make a setter routine  to adjust agressiveness
 static const double _SYNCLK_CORRECTION_THRESHOLD    = 2;
 
 // synchro clock state structure

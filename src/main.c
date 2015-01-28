@@ -5,6 +5,17 @@
    units (slave devices) with the Pixhawk (as master transmitter). 
 
 
+    Clock parameters are set in synchro_clock.h and implemented in the
+    wave generator source file, under _WG_configureHardware(). This 
+    firmware currently anticipates an Atmel ATTiny88 target platform 
+    with fuses set to enable the 8MHz internal calibrated oscillator. 
+    Additionally, the clock prescalar bits are not set, defaulting the 
+    internal system clock to full 8MHz operation.
+
+    PWM output occues at PB0, PB1, and PB2. PB0 is a bit-banged signal
+    whereas PB1/PB2 utilize the output compare hardware (the pins are
+    known as OC1A and OC1B, respectively).
+
   Authors: 
     Nate Fisher
 
@@ -17,6 +28,7 @@
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
 #include <avr/cpufunc.h>
+#include <util/delay.h>
 
 #include "math.h"
 
@@ -32,6 +44,9 @@ int main(void) {
     
     // init synchro node singleton
     SYNCLK_init();
+
+    // delay to acquire hardware pin settings
+    _delay_ms(200);
 
     // init TWI node singleton with device ID
     TWI_init(NODE_getId());
