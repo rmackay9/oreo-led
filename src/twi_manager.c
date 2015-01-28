@@ -29,6 +29,8 @@ void TWI_init(uint8_t deviceId) {
     TWAR = TWI_SLAVE_ADDRESS | TWAR_TWGCE;
     TWCR = ZERO | TWCR_TWEA | TWCR_TWEN | TWCR_TWIE;
 
+    // release clock lines on startup
+    TWCR |= TWCR_TWINT;
 }
 
 // specify callback to be executed
@@ -65,8 +67,15 @@ int TWI_getBufferSize(void) {
 // TWI ISR
 ISR(TWI_vect) {
 
+    // bus failure
+    if (TWSR == 0) {
+
+        // release clock line and send stop bit
+        //   in the event of a bus failure detected
+        TWCR |= TWCR_TWINT | TWCR_TWSTO;
+
     // general call detected
-    if (TWI_GENCALL_RCVD) {
+    } else if (TWI_GENCALL_RCVD) {
 
         // execute callback when general call received
         if (generalCallCB) generalCallCB();
@@ -91,7 +100,7 @@ ISR(TWI_vect) {
     } else if (TWI_SLAW_DATA_RCVD) {
 
         // record received data 
-        // until buffer is full
+        //   until buffer is full
         if (TWI_Ptr == TWI_MAX_BUFFER_SIZE) 
             TWI_isBufferAvailable = 0;
 

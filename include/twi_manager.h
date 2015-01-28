@@ -24,11 +24,13 @@ int TWI_Ptr;
 char TWI_Buffer[TWI_MAX_BUFFER_SIZE];
 
 // TWI hardware flags
-#define TWAR_TWGCE          0b00000001
 #define TWCR_TWINT          0b10000000
 #define TWCR_TWEA           0b01000000
+#define TWCR_TWSTA          0b00100000
+#define TWCR_TWSTO          0b00010000
 #define TWCR_TWEN           0b00000100
 #define TWCR_TWIE           0b00000001
+#define TWAR_TWGCE          0b00000001
 
 // TWI status definitions, as found in the
 // device datasheet
