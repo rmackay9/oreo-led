@@ -38,6 +38,10 @@ void TWI_init(uint8_t deviceId) {
 
     // release clock lines on startup
     TWCR |= TWCR_TWINT;
+
+    // enable 400kHz I2C
+    TWHSR = TWHSR_TWHS;	
+
 }
 
 // specify callback to be executed

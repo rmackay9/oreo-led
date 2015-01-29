@@ -31,6 +31,8 @@ char TWI_Buffer[TWI_MAX_BUFFER_SIZE];
 #define TWCR_TWEN           0b00000100
 #define TWCR_TWIE           0b00000001
 #define TWAR_TWGCE          0b00000001
+#define TWHSR_TWHS          0b00000001
+
 
 // TWI status definitions, as found in the
 // device datasheet
