@@ -78,51 +78,64 @@ int TWI_getBufferSize(void) {
 // TWI ISR
 ISR(TWI_vect) {
 
-    // bus failure
-    if (TWI_BUS_ERROR) {
+    
+    switch(TWSR) {
 
-        // release clock line and send stop bit
-        //   in the event of a bus failure detected
-        TWCR |= TWCR_TWINT | TWCR_TWSTO;
+        // bus failure
+        case TWI_BUS_ERROR:
 
-    // general call detected
-    } else if (TWI_GENCALL_RCVD) {
+            // release clock line and send stop bit
+            //   in the event of a bus failure detected
+            TWCR |= TWCR_TWINT | TWCR_TWSTO;
 
-        // execute callback when general call received
-        if (generalCallCB) generalCallCB();
+            break; 
 
-    // record the end of a transmission if 
-    //   stop bit received
-    //   TODO handle condition when stopped bit missed
-    } else if (TWI_STOP_RCVD) {
+        // general call detected
+        case TWI_GENCALL_RCVD:
 
-        // execute callback when data received
-        if (dataReceivedCB) dataReceivedCB();
-        
-    // every message with begin here
-    // reset pointer
-    } else if (TWI_SLAW_RCVD) {
+            // execute callback when general call received
+            if (generalCallCB) generalCallCB();
 
-        TWI_Ptr = 0;
-        TWI_isBufferAvailable = 1;
+            break; 
 
-    // if this unit was addressed and we're receiving
-    //   data, continue capturing into buffer
-    } else if (TWI_SLAW_DATA_RCVD) {
+        // record the end of a transmission if 
+        //   stop bit received
+        //   TODO handle condition when stopped bit missed
+        case TWI_STOP_RCVD:
 
-        // record received data 
-        //   until buffer is full
-        if (TWI_Ptr == TWI_MAX_BUFFER_SIZE) 
-            TWI_isBufferAvailable = 0;
+            // execute callback when data received
+            if (dataReceivedCB) dataReceivedCB();
+            
+            break;
 
-        if (TWI_isBufferAvailable)
-            TWI_Buffer[TWI_Ptr++] = TWDR;
+        // every message with begin here
+        // reset pointer
+        case TWI_SLAW_RCVD:
 
-    } else {
+            TWI_Ptr = 0;
+            TWI_isBufferAvailable = 1;
 
-        // default case 
-        //  assert PB4 for debug
-        PORTB |= 0b00010000; 
+            break; 
+
+        // if this unit was addressed and we're receiving
+        //   data, continue capturing into buffer
+        case TWI_SLAW_DATA_RCVD:
+
+            // record received data 
+            //   until buffer is full
+            if (TWI_Ptr == TWI_MAX_BUFFER_SIZE) 
+                TWI_isBufferAvailable = 0;
+
+            if (TWI_isBufferAvailable)
+                TWI_Buffer[TWI_Ptr++] = TWDR;
+
+            break;
+
+        default:
+
+            // default case 
+            //  assert PB4 for debug
+            PORTB |= 0b00010000; 
 
     }
 
