@@ -243,6 +243,15 @@ void _LPP_setParamMacro(LightParamMacro macro) {
             _self_pattern_protocol.redPattern->speed                = 1;
             _self_pattern_protocol.greenPattern->speed              = 1;
             _self_pattern_protocol.bluePattern->speed               = 1;
+            _self_pattern_protocol.redPattern->phase                = 0;
+            _self_pattern_protocol.greenPattern->phase              = 0;
+            _self_pattern_protocol.bluePattern->phase               = 0;
+            _self_pattern_protocol.redPattern->amplitude            = 120;
+            _self_pattern_protocol.redPattern->bias                 = 0;
+            _self_pattern_protocol.greenPattern->amplitude          = 50;
+            _self_pattern_protocol.greenPattern->bias               = 0;
+            _self_pattern_protocol.bluePattern->amplitude           = 70;
+            _self_pattern_protocol.bluePattern->bias                = 0;
             _LPP_setPattern(PATTERN_FADEIN);
             break;
             
@@ -263,6 +272,7 @@ void _LPP_setParamMacro(LightParamMacro macro) {
             _self_pattern_protocol.greenPattern->bias               = 0;
             _self_pattern_protocol.bluePattern->amplitude           = 0;
             _self_pattern_protocol.bluePattern->bias                = 0;
+            _LPP_setPattern(PATTERN_SOLID);
             break;
             
         case PARAM_MACRO_GREEN:
@@ -272,6 +282,7 @@ void _LPP_setParamMacro(LightParamMacro macro) {
             _self_pattern_protocol.greenPattern->bias               = 120;
             _self_pattern_protocol.bluePattern->amplitude           = 0;
             _self_pattern_protocol.bluePattern->bias                = 0;
+            _LPP_setPattern(PATTERN_SOLID);
             break;
             
         case PARAM_MACRO_BLUE:
@@ -281,6 +292,7 @@ void _LPP_setParamMacro(LightParamMacro macro) {
             _self_pattern_protocol.greenPattern->bias               = 0;
             _self_pattern_protocol.bluePattern->amplitude           = 115;
             _self_pattern_protocol.bluePattern->bias                = 120;
+            _LPP_setPattern(PATTERN_SOLID);
             break;
             
         case PARAM_MACRO_AMBER:
@@ -290,6 +302,7 @@ void _LPP_setParamMacro(LightParamMacro macro) {
             _self_pattern_protocol.greenPattern->bias               = 50;
             _self_pattern_protocol.bluePattern->amplitude           = 0;
             _self_pattern_protocol.bluePattern->bias                = 0;
+            _LPP_setPattern(PATTERN_SOLID);
             break;
             
         case PARAM_MACRO_WHITE:
@@ -299,6 +312,7 @@ void _LPP_setParamMacro(LightParamMacro macro) {
             _self_pattern_protocol.greenPattern->bias               = 100;
             _self_pattern_protocol.bluePattern->amplitude           = 27;
             _self_pattern_protocol.bluePattern->bias                = 30;
+            _LPP_setPattern(PATTERN_SOLID);
             break;
 
         case PARAM_MACRO_RESET:
