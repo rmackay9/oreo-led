@@ -79,7 +79,6 @@ void LPP_processBuffer(char* twiCommandBuffer, int size) {
             if (buffer_pointer + paramSize > size-1) break;
 
             // implement parameter+value update 
-            //process(currParam, start, stop, buffer);
             _LPP_processParameterUpdate(currParam, buffer_pointer+1, twiCommandBuffer);
 
             // advance pointer
