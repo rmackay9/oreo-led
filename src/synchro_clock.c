@@ -21,7 +21,6 @@ void SYNCLK_init(void) {
     // init instance members
     _self_synchro_clock.clockSkips                = 0;
     _self_synchro_clock.isPhaseCorrectionUpdated  = 1;
-    _self_synchro_clock.isCommandFresh            = 0;
     _self_synchro_clock.nodePhaseError            = 0;
     _self_synchro_clock.nodeTimeOffset            = 0;
     _self_synchro_clock.nodeTime                  = 0;
