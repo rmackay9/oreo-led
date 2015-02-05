@@ -21,38 +21,39 @@ using the 8-bit timer (Timer0) and a spare GPIO pin (PB0).
 The software is broken into modules and their interaction is depicted by the
 following diagram:
 
-        +------------------+        +----------------+
-        |                  |  tick  |                |
-        |                  < - - - -+  Waveform Gen  |---> To LEDs
-        |                  |        |                |
-        |                  |        +--------^-------+
-        |                  |                 |        
-        |   Synchronized   |                 |        
-        |   Clock          |                 |        
-        |                  |        +--------+-------+
-        |                  |  theta |                |
-        |                  +-------->  Pattern       |
-        |                  |        |  Generator     |
-        |                  |        |                |
-        +--------^---------+        +--------^-------+
-                 |                           |        
-                 |                           |        
-                 |                           |        
-                 |                  +--------+-------+
-                 |                  |                |
-                 |                  |  Lighting      |
-                 |                  |  Interface     |
-                 |                  |  Protocol      |
-                 |                  |                |
-                 |                  +--------^-------+
-                 |                           |        
-                 |                           |        
-                 |                           |        
-        +--------+---------------------------+-------+
-        |                                            |
-        |                TWI Manager                 |
-        |                                            |
-        +--------------------------------------------+
+        +------------------+        +----------------+            
+        |                  |  tick  |                |            
+        |                  | - - - -+  Waveform Gen  +---> To LEDs
+        |                  |        |                |            
+        |                  |        +--------^-------+            
+        |                  |                 |                    
+        |   Synchronized   |                 |                    
+        |   Clock          |                 |                    
+        |                  |        +--------+-------+            
+        |   (PLL)          |  theta |                |            
+        |                  +-------->  Pattern       |            
+        |                  |        |  Generator     |            
+        |                  |        |                |            
+        +--------^---------+        +--------^-------+            
+                 |                           |                    
+                 |                           |                    
+                 |                           |                    
+                 |                  +--------+-------+            
+                 |                  |                |            
+                 |                  |  Lighting      |            
+                 |                  |  Interface     <---+ Node ID
+                 |                  |  Protocol      |            
+                 |                  |                |            
+                 |                  +--------^-------+            
+                 |                           |                    
+                 |                           |                    
+                 |                           |                    
+        +--------+---------------------------+-------+            
+        |                                            |            
+        |                TWI Manager                 |            
+        |                                            |            
+        +--------------------------------------------+            
+
 
 #### Lighting Interface Protocol 
 Implementation of communications interface

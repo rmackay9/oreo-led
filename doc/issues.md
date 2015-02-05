@@ -19,6 +19,7 @@ Prioritized Tasks
     [x] color setting limits: high and low
     [x] create parameters for pattern coefficients
     [x] implement command parameter parser
+    [x] physical lines to set I2C address
 
 ## Code Quality
 
@@ -27,7 +28,8 @@ Prioritized Tasks
     
 ## Documentation
 
-    [ ] update interface contract document
+    [x] update interface contract document
+        - removing external documentation, keeping all docs in this repo under vcs
     [x] replace magic numbers
     [x] document examples as usage instructions
     [x] document instructions for programming
@@ -35,7 +37,12 @@ Prioritized Tasks
 
 # Checkout
 
-    [ ] verify all requested features with actual pixhawk 
+    [ ] verify multi-ESC operation
+    [ ] verify synchronzation
+    [ ] verify all pattern protocol features, including phase offset
+    [ ] validate all requested (SWF) features with actual pixhawk 
+    [ ] macro sequence power-on followed by breath not working correctly
+    [ ] double power-on macro animation speed 
 
 Known Issues
 ======
@@ -92,7 +99,6 @@ Future Development
 ======
 
     [ ] implement parameter reading function
-    [ ] physical lines to set I2C address
     [ ] wait to start pattern animation until current value is reached for smoother transition
     [ ] investigate proportional adjustments to phase error for faster correction
     [ ] hue parameters

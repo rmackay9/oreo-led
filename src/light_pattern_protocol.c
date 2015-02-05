@@ -15,6 +15,10 @@
 #include "light_pattern_protocol.h"
 #include "pattern_generator.h"
 #include "utilities.h"
+#include "node_manager.h"
+
+// module singleton
+static LightPatternProtocol _self_pattern_protocol;
 
 void LPP_setRedPatternGen(PatternGenerator* pattern) { 
 
@@ -191,35 +195,49 @@ void _LPP_processParameterUpdate(LightProtocolParameter param, int start, char* 
 // Pre-canned patterns and setting combinations
 // tuned through testing on lighting hardware
 void _LPP_setParamMacro(LightParamMacro macro) {
-
+    
     switch(macro) {
 
         case PARAM_MACRO_FWUPDATE:
             _self_pattern_protocol.redPattern->cyclesRemaining      = CYCLES_INFINITE;
             _self_pattern_protocol.greenPattern->cyclesRemaining    = CYCLES_INFINITE;
             _self_pattern_protocol.bluePattern->cyclesRemaining     = CYCLES_INFINITE;
+
             _self_pattern_protocol.redPattern->speed                = 1;
             _self_pattern_protocol.greenPattern->speed              = 1;
             _self_pattern_protocol.bluePattern->speed               = 1;
-            _self_pattern_protocol.redPattern->phase                += UTIL_degToRad(270);
-            _self_pattern_protocol.greenPattern->phase              += UTIL_degToRad(90);
-            _self_pattern_protocol.bluePattern->phase               += UTIL_degToRad(180);
+
+            _self_pattern_protocol.redPattern->phase                = UTIL_degToRad(270 + NODE_getId()*30);
+            _self_pattern_protocol.greenPattern->phase              = UTIL_degToRad(90  + NODE_getId()*30);
+            _self_pattern_protocol.bluePattern->phase               = UTIL_degToRad(180 + NODE_getId()*30);
+
             _self_pattern_protocol.redPattern->amplitude            = 120;
             _self_pattern_protocol.redPattern->bias                 = 120;
             _self_pattern_protocol.greenPattern->amplitude          = 50;
             _self_pattern_protocol.greenPattern->bias               = 50;
             _self_pattern_protocol.bluePattern->amplitude           = 70;
             _self_pattern_protocol.bluePattern->bias                = 70;
+
             _LPP_setPattern(PATTERN_SINE);
             break;
             
         case PARAM_MACRO_AUTOPILOT:
+            // USES PREVIOUSLY SET BIAS/AMPLITUDE
+            // AUTOPILOT MACRO SHOULD BE CALLED AFTER
+            // A COLOR SETTING HAS BEEN ISSUED
+
             _self_pattern_protocol.redPattern->cyclesRemaining      = CYCLES_INFINITE;
             _self_pattern_protocol.greenPattern->cyclesRemaining    = CYCLES_INFINITE;
             _self_pattern_protocol.bluePattern->cyclesRemaining     = CYCLES_INFINITE;
-            _self_pattern_protocol.redPattern->speed                = 1;
-            _self_pattern_protocol.greenPattern->speed              = 1;
-            _self_pattern_protocol.bluePattern->speed               = 1;
+
+            _self_pattern_protocol.redPattern->speed                = 2;
+            _self_pattern_protocol.greenPattern->speed              = 2;
+            _self_pattern_protocol.bluePattern->speed               = 2;
+
+            _self_pattern_protocol.redPattern->phase                = 0;
+            _self_pattern_protocol.greenPattern->phase              = 0;
+            _self_pattern_protocol.bluePattern->phase               = 0;
+
             _LPP_setPattern(PATTERN_SINE);
             break;
             

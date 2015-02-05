@@ -46,10 +46,10 @@ fuse:
 # Compile
 ##############################################
 
-${OBJECT_DIR}/light_pattern_protocol.o: ${SRC_DIR}/light_pattern_protocol.c ${INCLUDE_DIR}/light_pattern_protocol.h
+${OBJECT_DIR}/light_pattern_protocol.o: ${SRC_DIR}/light_pattern_protocol.c ${INCLUDE_DIR}/light_pattern_protocol.h ${INCLUDE_DIR}/utilities.h 
 	@${AVRGCC} ${CFLAGS} -c -g -Wa,-a,-ad ${SRC_DIR}/light_pattern_protocol.c -o ${OBJECT_DIR}/light_pattern_protocol.o > ${OBJECT_DIR}/light_pattern_protocol.s
 
-${OBJECT_DIR}/pattern_generator.o: ${SRC_DIR}/pattern_generator.c ${INCLUDE_DIR}/pattern_generator.h
+${OBJECT_DIR}/pattern_generator.o: ${SRC_DIR}/pattern_generator.c ${INCLUDE_DIR}/pattern_generator.h 
 	@${AVRGCC} ${CFLAGS} -c -g -Wa,-a,-ad ${SRC_DIR}/pattern_generator.c -o ${OBJECT_DIR}/pattern_generator.o > ${OBJECT_DIR}/pattern_generator.s 
 
 ${OBJECT_DIR}/synchro_clock.o: ${SRC_DIR}/synchro_clock.c ${INCLUDE_DIR}/synchro_clock.h

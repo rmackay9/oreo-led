@@ -72,7 +72,6 @@ typedef struct _Light_Pattern_Protocol {
     PatternGenerator* greenPattern;
     PatternGenerator* bluePattern;
 } LightPatternProtocol;
-LightPatternProtocol _self_pattern_protocol;
 
 void LPP_setCommandRefreshed(void);
 void LPP_setRedPatternGen(PatternGenerator*);
