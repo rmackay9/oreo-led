@@ -16,7 +16,7 @@
 #ifndef  WAVEFORM_GENERATOR_H
 #define  WAVEFORM_GENERATOR_H
 
-#define ZERO                  0b00000000
+#define ZERO                  0
 
 #define TCCR0A_CLOCK_FULL     0b00000001
 #define TCCR0A_CLOCK_DIV8     0b00000010

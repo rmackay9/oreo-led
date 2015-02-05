@@ -44,10 +44,8 @@ char TWI_Buffer[TWI_MAX_BUFFER_SIZE];
 #define TWI_STOP_RCVD       0xA0 
 
 // TWI application status flags
-uint8_t TWI_isCombinedFormat;
-uint8_t TWI_isSubAddrByte;
-uint8_t TWI_isSelected;
 uint8_t TWI_isBufferAvailable; 
+uint8_t TWI_isSlaveAddressed;
 
 // callbacks
 void (*generalCallCB)();

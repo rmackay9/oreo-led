@@ -26,8 +26,8 @@
 
 #include "utilities.h"
 
-#define CYCLES_INFINITE -2
-#define CYCLES_STOP -1
+static const int CYCLES_INFINITE = -2;
+static const int CYCLES_STOP = -1;
 
 typedef enum _Pattern_Enum {
     PATTERN_OFF, 
@@ -45,13 +45,13 @@ typedef struct _Pattern_Generator_State {
 
     // timer input: time state
     double theta;
-    int8_t cyclesRemaining; 
-    int isNewCycle;
+    int cyclesRemaining; 
+    char isNewCycle;
 
     // user input: pattern settings
     PatternEnum pattern;
     double speed;
-    uint16_t phase;
+    double phase;
     double amplitude;
     double bias;
 

@@ -44,7 +44,6 @@ static const double _SYNCLK_CORRECTION_THRESHOLD    = 2;
 typedef struct _Syncro_Clock_State {
     int clockSkips;
     char isPhaseCorrectionUpdated;
-    char isCommandFresh;
     int16_t nodePhaseError;
     int16_t nodeTimeOffset;
     uint32_t nodeTime;
