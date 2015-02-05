@@ -90,9 +90,10 @@ int main(void) {
 
         // run light effect calculations based
         //  on synchronized clock reference
-        PG_calc(&pgRed, SYNCLK_getClockPosition());
-        PG_calc(&pgGreen, SYNCLK_getClockPosition());
-        PG_calc(&pgBlue, SYNCLK_getClockPosition());
+        double clockPosition = SYNCLK_getClockPosition();
+        PG_calc(&pgRed, clockPosition);
+        PG_calc(&pgGreen, clockPosition);
+        PG_calc(&pgBlue, clockPosition);
 
         // update LED PWM duty cycle
         //  with values computed in pattern generator

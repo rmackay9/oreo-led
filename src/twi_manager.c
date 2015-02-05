@@ -17,6 +17,7 @@
 #include <avr/cpufunc.h>
 
 #include "twi_manager.h"
+#include "node_manager.h"
 
 void TWI_init(uint8_t deviceId) {
 
@@ -85,6 +86,10 @@ ISR(TWI_vect) {
             //   in the event of a bus failure detected
             TWCR |= TWCR_TWINT | TWCR_TWSTO;
 
+            // re-init device
+            // slave address will be lost in this case
+            TWI_init(NODE_getId());
+
             break; 
 
         // general call detected
@@ -92,7 +97,7 @@ ISR(TWI_vect) {
 
             // execute callback when general call received
             if (generalCallCB) generalCallCB();
-
+            TWI_isSlaveAddressed = 0;
             break; 
 
         // record the end of a transmission if 
@@ -101,8 +106,10 @@ ISR(TWI_vect) {
         case TWI_STOP_RCVD:
 
             // execute callback when data received
-            if (dataReceivedCB) dataReceivedCB();
-            
+            // and addressed as slave (do not process gen call data)
+            if (TWI_isSlaveAddressed && dataReceivedCB) 
+                dataReceivedCB();
+
             break;
 
         // every message with begin here
@@ -111,7 +118,7 @@ ISR(TWI_vect) {
 
             TWI_Ptr = 0;
             TWI_isBufferAvailable = 1;
-
+            TWI_isSlaveAddressed = 1;
             break; 
 
         // if this unit was addressed and we're receiving

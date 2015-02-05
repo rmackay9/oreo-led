@@ -37,7 +37,7 @@ void PG_calc(PatternGenerator* self, double clock_position) {
 
     // decrement the cycles remaining until
     // equals CYCLES_STOP
-    if (self->isNewCycle && self->cyclesRemaining >= 0) 
+    if (self->isNewCycle && self->cyclesRemaining >= 0)
         self->cyclesRemaining--;
 
     // update pattern value
