@@ -46,7 +46,9 @@ int main(void) {
     SYNCLK_init();
 
     // delay to acquire hardware pin settings
+    // then initialize node ID on the pin config detected
     _delay_ms(200);
+    NODE_init();
 
     // init TWI node singleton with device ID
     TWI_init(NODE_getId());
