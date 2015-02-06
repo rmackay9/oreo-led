@@ -50,7 +50,7 @@ static void NODE_init() {
 
 // return node station ID
 static uint8_t NODE_getId() {
-
+    NODE_init();
     return _NODE_station;
 
 }

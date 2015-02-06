@@ -51,11 +51,11 @@ int main(void) {
     NODE_init();
 
     // init TWI node singleton with device ID
-    TWI_init(NODE_getId());
+    //TWI_init(NODE_getId());
 
     // register TWI event callbacks
-    TWI_onGeneralCall(SYNCLK_recordPhaseError);
-    TWI_onDataReceived(LPP_setCommandRefreshed);
+    //TWI_onGeneralCall(SYNCLK_recordPhaseError);
+    //TWI_onDataReceived(LPP_setCommandRefreshed);
 
     // create pattern generators for all
     //  three LED channels
@@ -87,6 +87,9 @@ int main(void) {
     // enable interrupts 
     sei();
 
+    // immediately start with POWERON macro effect
+    _LPP_setParamMacro(PARAM_MACRO_POWERON);
+
     // application mainloop 
     while(1) {
 
@@ -107,7 +110,7 @@ int main(void) {
 
         // parse commands per interface contract
         //  and update pattern generators accordingly
-        LPP_processBuffer(TWI_getBuffer(), TWI_getBufferSize());
+        //LPP_processBuffer(TWI_getBuffer(), TWI_getBufferSize());
 
     }
 
