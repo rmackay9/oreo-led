@@ -25,10 +25,10 @@
 #define _NODE_UNINITIALIZED_STATION 255
 static uint8_t _NODE_station = _NODE_UNINITIALIZED_STATION;
 
-// set node ID
+// return node station ID
 // For SOLO, the ID scheme is zero-indexed, beginning
 // with left-rear node, inreasing counter-clockwise
-static void NODE_init() {
+static uint8_t NODE_getId() {
 
     if (_NODE_station == _NODE_UNINITIALIZED_STATION) {
 
@@ -46,12 +46,6 @@ static void NODE_init() {
 
     }
 
-}
-
-// return node station ID
-static uint8_t NODE_getId() {
-
-    NODE_init();
     return _NODE_station;
 
 }
