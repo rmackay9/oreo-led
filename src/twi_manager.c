@@ -73,18 +73,32 @@ int TWI_getBufferSize(void) {
 
 }
 
+// reset bit pattern for TWI control register
+const char TWCR_RESET = TWCR_TWINT | TWCR_TWIE | TWCR_TWEA | TWCR_TWEN;
+
 // TWI ISR
 ISR(TWI_vect) {
 
-    
     switch(TWSR) {
 
+        // Own SLA+R has been received; ACK has been returned
+        case TWI_STX_ADR_ACK:      
+        // Arbitration lost in SLA+R/W as Master; own SLA+R has been received; 
+        // ACK has been returned      
+        case TWI_STX_ADR_ACK_M_ARB_LOST: 
+        // Data byte in TWDR has been transmitted; ACK has been received
+        case TWI_STX_DATA_ACK:           
+            // set per atmel app note example for SLAR mode
+            TWCR = TWCR_RESET;
+            break;
+
         // bus failure
+        case TWI_NO_STATE:
         case TWI_BUS_ERROR:
 
             // release clock line and send stop bit
             //   in the event of a bus failure detected
-            TWCR |= TWCR_TWINT | TWCR_TWSTO;
+            TWCR = TWCR_TWINT | TWCR_TWSTO;
 
             // re-init device
             // slave address will be lost in this case
@@ -93,37 +107,57 @@ ISR(TWI_vect) {
             break; 
 
         // general call detected
-        case TWI_GENCALL_RCVD:
+        case TWI_SRX_GEN_ACK:
 
             // execute callback when general call received
             if (generalCallCB) generalCallCB();
             TWI_isSlaveAddressed = 0;
+
+            // reset TWCR
+            TWCR = TWCR_RESET;
+
             break; 
 
-        // record the end of a transmission if 
-        //   stop bit received
-        //   TODO handle condition when stopped bit missed
-        case TWI_STOP_RCVD:
+        // Previously addressed with general call; 
+        // data has been received; ACK has been returned
+        case TWI_SRX_GEN_DATA_ACK: 
+
+            // reset TWCR
+            TWCR = TWCR_RESET;
+            break;
+
+        // A STOP condition or repeated START condition has been 
+        // received while still addressed as Slave    
+        //   Record the end of a transmission if stop bit received
+        case TWI_SRX_STOP_RESTART:
 
             // execute callback when data received
             // and addressed as slave (do not process gen call data)
             if (TWI_isSlaveAddressed && dataReceivedCB) 
                 dataReceivedCB();
 
+            // reset TWCR
+            TWCR = TWCR_RESET;
+
             break;
 
-        // every message with begin here
-        // reset pointer
-        case TWI_SLAW_RCVD:
+        // Own SLA+W has been received ACK has been returned
+        //   every message with begin here
+        case TWI_SRX_ADR_ACK:
 
+            // reset pointer
             TWI_Ptr = 0;
             TWI_isBufferAvailable = 1;
             TWI_isSlaveAddressed = 1;
+
+            // reset TWCR
+            TWCR = TWCR_RESET;
+
             break; 
 
         // if this unit was addressed and we're receiving
         //   data, continue capturing into buffer
-        case TWI_SLAW_DATA_RCVD:
+        case TWI_SRX_ADR_DATA_ACK: 
 
             // record received data 
             //   until buffer is full
@@ -133,9 +167,29 @@ ISR(TWI_vect) {
             if (TWI_isBufferAvailable)
                 TWI_Buffer[TWI_Ptr++] = TWDR;
 
+            // reset TWCR
+            TWCR = TWCR_RESET;
+
             break;
 
+        // Previously addressed with own SLA+W; data has been received; 
+        // NOT ACK has been returned
+        case TWI_SRX_ADR_DATA_NACK: 
+        // Previously addressed with general call; data has been received; 
+        // NOT ACK has been returned  
+        case TWI_SRX_GEN_DATA_NACK:
+        // Last data byte in TWDR has been transmitted (TWEA = “0”); 
+        // ACK has been received   
+        case TWI_STX_DATA_ACK_LAST_BYTE:
+            // reset TWCR
+            TWCR = TWCR_RESET;
+            break;
+
+        // something horrible and upforeseen has happened
         default:
+
+            // reset TWCR
+            TWCR = TWCR_RESET;
 
             // default case 
             //  assert PB4 for debug
