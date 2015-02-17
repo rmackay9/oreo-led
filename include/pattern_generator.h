@@ -42,21 +42,16 @@ typedef enum _Pattern_Enum {
 } PatternEnum;
 
 typedef struct _Pattern_Generator_State {
-
-    // timer input: time state
-    double theta;
+    
     int cyclesRemaining; 
-    char isNewCycle;
-
-    // user input: pattern settings
     PatternEnum pattern;
+    double theta;
     double speed;
     double phase;
     double amplitude;
     double bias;
-
-    // output: rendered value
     uint8_t value;
+    char isNewCycle;
 
 } PatternGenerator;
 
