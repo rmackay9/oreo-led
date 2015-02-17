@@ -46,7 +46,6 @@ typedef struct _Waveform_Generator_State {
     uint8_t* channel_target[3];
     void (*overflowCallback)();
 } WaveformGenerator;
-WaveformGenerator _self_waveform_gen;
 
 void WG_init(uint8_t**, int);
 void WG_onOverflow(void(*)());

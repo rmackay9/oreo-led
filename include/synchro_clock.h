@@ -50,9 +50,6 @@ typedef struct _Syncro_Clock_State {
     void (*recordPhaseError)();
 } SyncroClock;
 
-// synchro clock singleton instance
-SyncroClock _self_synchro_clock;
-
 void SYNCLK_init(void);
 double SYNCLK_getClockPosition(void);
 void SYNCLK_updateClock(void);

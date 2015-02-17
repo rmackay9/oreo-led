@@ -16,7 +16,10 @@
 #include "synchro_clock.h"
 
 #include "utilities.h"
-  
+
+// private module singleton instance
+static SyncroClock _self_synchro_clock;
+
 void SYNCLK_init(void) {
     // init instance members
     _self_synchro_clock.clockSkips                = 0;

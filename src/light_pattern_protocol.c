@@ -17,7 +17,7 @@
 #include "utilities.h"
 #include "node_manager.h"
 
-// module singleton
+// private module singleton instance
 static LightPatternProtocol _self_pattern_protocol;
 
 void LPP_setRedPatternGen(PatternGenerator* pattern) { 

@@ -18,6 +18,9 @@
 #include "math.h"
 #include "waveform_generator.h"
 
+// private module singleton instance
+static WaveformGenerator _self_waveform_gen;
+
 // setup wavegen hardware; assign inputs and outputs
 //  - register the pattern generator calculated values
 //    with (up to three) hardware waveform outputs
