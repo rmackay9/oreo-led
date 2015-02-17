@@ -37,12 +37,12 @@ Prioritized Tasks
 
 # Checkout
 
-    [ ] verify multi-ESC operation
-    [ ] verify synchronzation
-    [ ] verify all pattern protocol features, including phase offset
+    [x] verify multi-ESC operation
+    [x] verify synchronzation
+    [x] verify all pattern protocol features, including phase offset
     [ ] validate all requested (SWF) features with actual pixhawk 
     [ ] macro sequence power-on followed by breath not working correctly
-    [ ] double power-on macro animation speed 
+    [x] double power-on macro animation speed 
 
 Known Issues
 ======
@@ -84,16 +84,15 @@ Known Issues
     [x] i2c general call signal is not being transmitted by fake master
         - this may have been identified as an instrumentation error
     [x] verify synchronization is working with a solid phase signal
-    [ ] verify working on actual hardware
+    [x] verify working on actual hardware
 
 ## I2C Bus 
 
-    [ ] slave holds sda line high and stops all communication
+    [x] slave holds sda line high and stops all communication
         - appears to be side effect of fake master simulation
         - could also have been due to the software sub addresses (removed)
     [ ] slaves freeze after a sequential phase offset command to each unit
         - appears to be side effect of fake master simulation
-    [ ] verify fixed on actual hardware
 
 Future Development
 ======
