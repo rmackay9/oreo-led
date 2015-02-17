@@ -42,12 +42,12 @@ static const double _SYNCLK_CORRECTION_THRESHOLD    = 2;
 
 // synchro clock state structure
 typedef struct _Syncro_Clock_State {
-    int clockSkips;
+    void (*recordPhaseError)();
     char isPhaseCorrectionUpdated;
+    int16_t clockSkips;
     int16_t nodePhaseError;
     int16_t nodeTimeOffset;
     uint32_t nodeTime;
-    void (*recordPhaseError)();
 } SyncroClock;
 
 void SYNCLK_init(void);
