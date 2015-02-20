@@ -99,22 +99,18 @@ int main(void) {
     //  updates in a coordinated way
     WG_onOverflow(SYNCLK_updateClock);
 
-    // enable interrupts 
-    sei();
-
     // if previous shutdown was a WDT reset...
-    if (mcusr_mirror && 0x08) {
-
-        // do not perform startup check
-        NODE_system_status = NODE_STARTUP_SUCCESS;
-
-        // set wdt to 0.5s and system reset mode
-        NODE_wdt_setHalfSecResetMode();
+    if (mcusr_mirror & 0x08) {
 
         // resume pattern
         if (NODE_isRestoreStateAvailable()) 
             NODE_restoreRGBState(&pgRed, &pgGreen, &pgBlue);
 
+        // set wdt to 0.5s and system reset mode
+        NODE_wdt_setHalfSecResetMode();
+        
+        // do not perform startup check
+        NODE_system_status = NODE_STARTUP_SUCCESS;
 
     } else {
 
@@ -133,6 +129,9 @@ int main(void) {
 
     // reset wdt timer
     NODE_wdt_reset();
+
+    // enable interrupts 
+    sei();
 
     // application mainloop 
     while(1) {
@@ -203,6 +202,8 @@ ISR(WDT_vect) {
 
             // reset wdt flag
             MCUSR = 0;
+            // reset wdt timer
+            NODE_wdt_reset();
 
             break;
 
@@ -217,6 +218,8 @@ ISR(WDT_vect) {
         
             // reset wdt flag
             MCUSR = 0;
+            // reset wdt timer
+            NODE_wdt_reset();
 
             break;
 
@@ -227,9 +230,6 @@ ISR(WDT_vect) {
             NODE_saveRGBState(&pgRed, &pgGreen, &pgBlue);
 
     }
-
-    // reset wdt timer
-    NODE_wdt_reset();
 
     return;
 

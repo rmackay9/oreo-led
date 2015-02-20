@@ -126,6 +126,9 @@ void NODE_saveRGBState(PatternGenerator* r, PatternGenerator* g, PatternGenerato
     eeprom_write_byte(RESTORE_POINT_GREEN_VALUE, (char)g->value);
     eeprom_write_byte(RESTORE_POINT_BLUE_VALUE, (char)b->value);
 
+    // restore state is now available
+    eeprom_write_byte(RESTORE_POINT_AVAILABLE_ADDR, 1);
+
     // enable interrupts
     sei();
 
