@@ -38,7 +38,11 @@ void LPP_setBluePatternGen(PatternGenerator* pattern) {
 
 }
         
-void LPP_processBuffer(char* twiCommandBuffer, int size) {
+uint8_t LPP_processBuffer(char* twiCommandBuffer, int size) {
+
+
+    // return true if command was processed
+    uint8_t processed_retval = 0;
 
     // if command is new, re-parse
     // ensure valid length buffer
@@ -46,6 +50,9 @@ void LPP_processBuffer(char* twiCommandBuffer, int size) {
     if (twiCommandBuffer && 
         size > 0 &&
         _self_pattern_protocol.isCommandFresh) {
+
+        // signal startup 
+        processed_retval = 1;
 
         // set pattern if command is not a param-only command
         if (twiCommandBuffer[0] != PATTERN_PARAMUPDATE)
@@ -94,6 +101,8 @@ void LPP_processBuffer(char* twiCommandBuffer, int size) {
 
     // signal command has been parsed
     _self_pattern_protocol.isCommandFresh = 0;
+
+    return processed_retval;
 
 }
 
@@ -182,7 +191,7 @@ void _LPP_processParameterUpdate(LightProtocolParameter param, int start, char* 
 
         case PARAM_MACRO:
             if (buffer[start] < PARAM_MACRO_ENUM_COUNT)
-                _LPP_setParamMacro(buffer[start]);
+                LPP_setParamMacro(buffer[start]);
             break;
 
         default:
@@ -193,7 +202,7 @@ void _LPP_processParameterUpdate(LightProtocolParameter param, int start, char* 
 
 // Pre-canned patterns and setting combinations
 // tuned through testing on lighting hardware
-void _LPP_setParamMacro(LightParamMacro macro) {
+void LPP_setParamMacro(LightParamMacro macro) {
     
     switch(macro) {
 

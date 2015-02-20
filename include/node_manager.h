@@ -13,8 +13,22 @@
 
 **********************************************************************/
 
-#ifndef  NODE_MANAGER_H
-#define  NODE_MANAGER_H
+
+#include <avr/io.h>
+#include "pattern_generator.h"
+
+// node status:
+//  NODE_STARTUP_PENDING    - no communication received, status undetermined
+//  NODE_STARTUP_SUCCESS    - comm received and wdt config updated to reset mode
+//  NODE_STARTUP_COMMRCVD   - comm detected, wdt not changed to reset mode config
+//  NODE_STARTUP_FAIL       - startup timeout exceeded without detecting comms
+enum {NODE_STARTUP_PENDING, NODE_STARTUP_SUCCESS, NODE_STARTUP_COMMRCVD, NODE_STARTUP_FAIL};
+uint8_t NODE_system_status;
+
+// startup timeout value to initiate failure mode
+//  in the event no i2c communications received
+#define NODE_MAX_TIMEOUT_SECONDS 12
+uint8_t NODE_startup_timeout_seconds;
 
 // id of first node considered in 'front' of
 // aircraft - used to determine lighting color orientation
@@ -23,31 +37,24 @@
 // store node station ID once derived; Before determined
 // by hardware pins, the ID is conisdered uninitialized
 #define _NODE_UNINITIALIZED_STATION 255
-static uint8_t _NODE_station = _NODE_UNINITIALIZED_STATION;
+uint8_t _NODE_station;
 
-// return node station ID
-// For SOLO, the ID scheme is zero-indexed, beginning
-// with left-rear node, inreasing counter-clockwise
-static uint8_t NODE_getId() {
+// Reset the watchdog timer.  When the watchdog timer is enabled,
+#define NODE_wdt_reset() __asm__ __volatile__ ("wdr")
 
-    if (_NODE_station == _NODE_UNINITIALIZED_STATION) {
+#define RESTORE_POINT_AVAILABLE_ADDR    (uint8_t *)0x01
+#define RESTORE_POINT_RED_VALUE         (uint8_t *)0x02
+#define RESTORE_POINT_GREEN_VALUE       (uint8_t *)0x03
+#define RESTORE_POINT_BLUE_VALUE        (uint8_t *)0x04
 
-        SPCR    = 0x00; // disable SPI
-        PCICR   = 0x00; // disable all pin interrupts
-        
-        // set PD6/PD7 as inputs (0 == input | 1 == output)
-        DDRD = 0b00111111; 
+// manage node restore on WDT system reset
+void NODE_restoreRGBState(PatternGenerator*, PatternGenerator*, PatternGenerator*);
+void NODE_saveRGBState(PatternGenerator*, PatternGenerator*, PatternGenerator*);
+void NODE_setRestoreStateUnavailable();
+uint8_t NODE_isRestoreStateAvailable();
 
-        // turn off pullup resistor
-        PORTD = 0x00;
 
-        // capture unit station 
-        _NODE_station = (PIND & 0b11000000) >> 6;
-
-    }
-
-    return _NODE_station;
-
-}
-
-#endif
+uint8_t NODE_getId();
+void NODE_init();
+void NODE_wdt_setOneSecInterruptMode();
+void NODE_wdt_setHalfSecResetMode();

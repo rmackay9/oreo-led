@@ -77,10 +77,11 @@ void LPP_setCommandRefreshed(void);
 void LPP_setRedPatternGen(PatternGenerator*);
 void LPP_setGreenPatternGen(PatternGenerator*);
 void LPP_setBluePatternGen(PatternGenerator*);
-void LPP_processBuffer(char*, int);
+uint8_t LPP_processBuffer(char*, int);
+void LPP_setParamMacro(LightParamMacro);
 void _LPP_processParameterUpdate(LightProtocolParameter, int, char*);
 void _LPP_setPattern(int);
-void _LPP_setParamMacro(LightParamMacro);
+
 
 #endif
   

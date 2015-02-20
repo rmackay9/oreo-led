@@ -6,7 +6,7 @@ INCLUDE_DIR=include
 OUTPUT_NAME=main
 OBJECTS=${OBJECT_DIR}/light_pattern_protocol.o ${OBJECT_DIR}/twi_manager.o 
 OBJECTS+= ${OBJECT_DIR}/pattern_generator.o ${OBJECT_DIR}/synchro_clock.o
-OBJECTS+= ${OBJECT_DIR}/waveform_generator.o
+OBJECTS+= ${OBJECT_DIR}/waveform_generator.o ${OBJECT_DIR}/node_manager.o
 
 # shell commands
 CP=cp 
@@ -17,11 +17,11 @@ MV=mv
 # build commands
 #PROGRAMMER=dragon_isp
 PROGRAMMER=jtag3isp
-PROG=avrdude -c ${PROGRAMMER} -p attiny88 -V 
+PROG=avrdude -B 8.0 -c ${PROGRAMMER} -p attiny88 
 AVROBJCOPY=avr-objcopy 
 AVRSIZE=avr-size 
 AVRGCC=avr-gcc 
-CFLAGS=-Wall -Os -DF_CPU=8000000 -mmcu=attiny88 -Iinclude 
+CFLAGS=-Wall -Wpadded -Os -DF_CPU=8000000 -mmcu=attiny88 -Iinclude 
 
 ##############################################
 # High level directives
@@ -61,7 +61,10 @@ ${OBJECT_DIR}/twi_manager.o: ${SRC_DIR}/twi_manager.c ${INCLUDE_DIR}/twi_manager
 ${OBJECT_DIR}/waveform_generator.o: ${SRC_DIR}/waveform_generator.c ${INCLUDE_DIR}/waveform_generator.h
 	@${AVRGCC} ${CFLAGS} -c -g -Wa,-a,-ad ${SRC_DIR}/waveform_generator.c -o ${OBJECT_DIR}/waveform_generator.o > ${OBJECT_DIR}/waveform_generator.s
 
-${OBJECT_DIR}/main.o: ${SRC_DIR}/main.c ${OBJECTS} ${INCLUDE_DIR}/utilities.h ${INCLUDE_DIR}/node_manager.h
+${OBJECT_DIR}/node_manager.o: ${SRC_DIR}/node_manager.c ${INCLUDE_DIR}/node_manager.h
+	@${AVRGCC} ${CFLAGS} -c -g -Wa,-a,-ad ${SRC_DIR}/node_manager.c -o ${OBJECT_DIR}/node_manager.o > ${OBJECT_DIR}/node_manager.s
+
+${OBJECT_DIR}/main.o: ${SRC_DIR}/main.c ${OBJECTS} ${INCLUDE_DIR}/utilities.h ${OBJECT_DIR}/node_manager.o
 	@${AVRGCC} ${CFLAGS} -c -g -Wa,-a,-ad ${SRC_DIR}/main.c -o ${OBJECT_DIR}/main.o > ${OBJECT_DIR}/main.s
 
 ##############################################
