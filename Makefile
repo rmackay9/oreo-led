@@ -16,8 +16,9 @@ MV=mv
 
 # build commands
 #PROGRAMMER=dragon_isp
-PROGRAMMER=jtag3isp
-PROG=avrdude -B 8.0 -c ${PROGRAMMER} -p attiny88 
+#PROGRAMMER=jtag3isp -B 8.0
+PROGRAMMER=avrisp2
+PROG=avrdude -c ${PROGRAMMER} -p attiny88 
 AVROBJCOPY=avr-objcopy 
 AVRSIZE=avr-size 
 AVRGCC=avr-gcc 
@@ -28,7 +29,6 @@ CFLAGS=-Wall -Wpadded -Os -DF_CPU=8000000 -mmcu=attiny88 -Iinclude
 ##############################################
 
 all: 
-	make clean
 	@${MKDIR} ${OBJECT_DIR}
 	make ${OBJECT_DIR}/${OUTPUT_NAME}.hex
 	

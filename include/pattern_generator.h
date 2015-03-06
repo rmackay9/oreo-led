@@ -30,15 +30,15 @@ static const int CYCLES_INFINITE = -2;
 static const int CYCLES_STOP = -1;
 
 typedef enum _Pattern_Enum {
-    PATTERN_OFF, 
-    PATTERN_SINE, 
-    PATTERN_SOLID,
-    PATTERN_SIREN,
-    PATTERN_STROBE,
-    PATTERN_FADEIN, 
-    PATTERN_FADEOUT,
-    PATTERN_PARAMUPDATE,
-    PATTERN_ENUM_COUNT
+    PATTERN_OFF,                // 0
+    PATTERN_SINE,               // 1
+    PATTERN_SOLID,              // 2
+    PATTERN_SIREN,              // 3
+    PATTERN_STROBE,             // 4
+    PATTERN_FADEIN,             // 5
+    PATTERN_FADEOUT,            // 6
+    PATTERN_PARAMUPDATE,        // 7
+    PATTERN_ENUM_COUNT          // 8
 } PatternEnum;
 
 typedef struct _Pattern_Generator_State {

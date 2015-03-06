@@ -282,23 +282,12 @@ void LPP_setParamMacro(LightParamMacro macro) {
             _self_pattern_protocol.greenPattern->phase              = 0;
             _self_pattern_protocol.bluePattern->phase               = 0;
 
-            // front ESCs power on as white
-            // rear ESCs power on as red
-            if (NODE_getId() == 2 || NODE_getId() == 3) {
-                _self_pattern_protocol.redPattern->amplitude            = 115;
-                _self_pattern_protocol.redPattern->bias                 = 120;
-                _self_pattern_protocol.greenPattern->amplitude          = 95;
-                _self_pattern_protocol.greenPattern->bias               = 100;
-                _self_pattern_protocol.bluePattern->amplitude           = 27;
-                _self_pattern_protocol.bluePattern->bias                = 30;
-            } else {
-                _self_pattern_protocol.redPattern->amplitude            = 115;
-                _self_pattern_protocol.redPattern->bias                 = 120;
-                _self_pattern_protocol.greenPattern->amplitude          = 0;
-                _self_pattern_protocol.greenPattern->bias               = 0;
-                _self_pattern_protocol.bluePattern->amplitude           = 0;
-                _self_pattern_protocol.bluePattern->bias                = 0;
-            }
+            _self_pattern_protocol.redPattern->amplitude            = 0;
+            _self_pattern_protocol.redPattern->bias                 = 0;
+            _self_pattern_protocol.greenPattern->amplitude          = 115;
+            _self_pattern_protocol.greenPattern->bias               = 120;
+            _self_pattern_protocol.bluePattern->amplitude           = 0;
+            _self_pattern_protocol.bluePattern->bias                = 0;
 
             _LPP_setPattern(PATTERN_FADEIN);
             break;

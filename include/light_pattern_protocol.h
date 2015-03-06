@@ -25,32 +25,32 @@
 #define MAX_PATTERN_PERIOD 4000.0
 
 typedef enum _Light_Protocol_Parameter {
-    PARAM_BIAS_RED,
-    PARAM_BIAS_GREEN,
-    PARAM_BIAS_BLUE,
-    PARAM_AMPLITUDE_RED,
-    PARAM_AMPLITUDE_GREEN,
-    PARAM_AMPLITUDE_BLUE,
-    PARAM_PERIOD,
-    PARAM_REPEAT,
-    PARAM_PHASEOFFSET,
-    PARAM_MACRO,
-    PARAM_ENUM_COUNT
+    PARAM_BIAS_RED,             // 0
+    PARAM_BIAS_GREEN,           // 1
+    PARAM_BIAS_BLUE,            // 2
+    PARAM_AMPLITUDE_RED,        // 3
+    PARAM_AMPLITUDE_GREEN,      // 4
+    PARAM_AMPLITUDE_BLUE,       // 5
+    PARAM_PERIOD,               // 6
+    PARAM_REPEAT,               // 7
+    PARAM_PHASEOFFSET,          // 8
+    PARAM_MACRO,                // 9
+    PARAM_ENUM_COUNT            // 10
 } LightProtocolParameter;
 
 typedef enum _Light_Param_Macro {
-    PARAM_MACRO_RESET,
-    PARAM_MACRO_FWUPDATE,
-    PARAM_MACRO_AUTOPILOT,
-    PARAM_MACRO_CALIBRATE,
-    PARAM_MACRO_POWERON,
-    PARAM_MACRO_POWEROFF,
-    PARAM_MACRO_RED,
-    PARAM_MACRO_GREEN,
-    PARAM_MACRO_BLUE,
-    PARAM_MACRO_AMBER,
-    PARAM_MACRO_WHITE,
-    PARAM_MACRO_ENUM_COUNT
+    PARAM_MACRO_RESET,          // 0
+    PARAM_MACRO_FWUPDATE,       // 1
+    PARAM_MACRO_AUTOPILOT,      // 2
+    PARAM_MACRO_CALIBRATE,      // 3
+    PARAM_MACRO_POWERON,        // 4
+    PARAM_MACRO_POWEROFF,       // 5
+    PARAM_MACRO_RED,            // 6
+    PARAM_MACRO_GREEN,          // 7
+    PARAM_MACRO_BLUE,           // 8
+    PARAM_MACRO_AMBER,          // 9
+    PARAM_MACRO_WHITE,          // 10
+    PARAM_MACRO_ENUM_COUNT      // 11
 } LightParamMacro;
 
 static const short int LightParameterSize[PARAM_ENUM_COUNT] = {
@@ -84,4 +84,3 @@ void _LPP_setPattern(int);
 
 
 #endif
-  
