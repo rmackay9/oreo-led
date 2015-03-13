@@ -189,6 +189,13 @@ void _LPP_processParameterUpdate(LightProtocolParameter param, int start, char* 
             _self_pattern_protocol.bluePattern->phase   = received_uint_radians;
             break;
 
+        case PARAM_THETA: 
+            received_uint_radians = UTIL_degToRad(UTIL_charToInt(buffer[start], buffer[start+1]));
+            _self_pattern_protocol.redPattern->theta    = received_uint_radians;
+            _self_pattern_protocol.greenPattern->theta  = received_uint_radians;
+            _self_pattern_protocol.bluePattern->theta   = received_uint_radians;
+            break;
+
         case PARAM_MACRO:
             if (buffer[start] < PARAM_MACRO_ENUM_COUNT)
                 LPP_setParamMacro(buffer[start]);
