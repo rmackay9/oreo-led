@@ -100,7 +100,6 @@ The microcontroller clock selection bit must be set to allow software selection
 of the full rate clock (8MHz). This required to be run only once and can be 
 executed via the Makefile command, `make fuse`.
 
-
 ### Build
 Compiling and linking the hex file for target hardware is automated via the 
 included Makefile. Simply run `make` to create a target output. 

@@ -35,6 +35,7 @@ typedef enum _Light_Protocol_Parameter {
     PARAM_REPEAT,
     PARAM_PHASEOFFSET,
     PARAM_MACRO,
+    PARAM_THETA,
     PARAM_ENUM_COUNT
 } LightProtocolParameter;
 
@@ -63,7 +64,8 @@ static const short int LightParameterSize[PARAM_ENUM_COUNT] = {
     2,  // Period
     1,  // Repeat
     2,  // Phase Offset
-    1   // Param Macro
+    1,  // Param Macro
+    2   // Theta
 };
 
 typedef struct _Light_Pattern_Protocol {
